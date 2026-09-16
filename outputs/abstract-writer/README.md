@@ -38,10 +38,28 @@ Hermes를 이미 쓰고 있다면 `~/.hermes/.env`의 키와 같은 값을 넣�
 
 ```bash
 pkg install -y git python
-git clone https://github.com/xbtion99/hermesmind
+git clone --depth 1 -b claude/abstract-deep-writing-program-3q05pn \
+    https://github.com/xbtion99/hermesmind
 cd hermesmind/outputs/abstract-writer
 bash termux-setup.sh
 ```
+
+`-b`로 브랜치를 지정하는 이유는 이 프로그램이 아직 `main`에 머지되지 않았기 때문이다.
+그냥 `git clone`만 하면 `main`을 받게 되고 `outputs/` 폴더가 없어서
+`cd: No such file or directory`가 난다. `--depth 1`은 폰에서 받는 양을 줄인다
+(전체 이력은 수만 개 객체, 브랜치 하나만 얕게 받으면 약 28MB).
+
+이미 `main`을 clone 해버렸다면 다시 받을 필요 없이 브랜치만 가져오면 된다.
+
+```bash
+cd hermesmind
+git fetch --depth 1 origin claude/abstract-deep-writing-program-3q05pn
+git checkout -b aw FETCH_HEAD
+cd outputs/abstract-writer
+bash termux-setup.sh
+```
+
+`main`에 머지된 뒤에는 `-b` 없이 평범하게 clone 하면 된다.
 
 `termux-setup.sh`가 하는 일은 네 가지다. Python 3.10 이상인지 확인하고, 키 없이 파이프라인이
 도는지 오프라인으로 한 번 돌려보고, `~/.abstract-writer.env`를 만들고, `~/.bashrc`에 `aw` 명령을 추가한다.

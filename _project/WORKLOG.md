@@ -15,3 +15,13 @@
 - 결정: `aw`를 cd 대신 PYTHONPATH로 구현 (상대경로 footgun 제거)
 - blocker: 실제 Termux 기기에서 미실행
 - 다음 한 가지 행동: 폰에서 termux-setup.sh를 실행하고 `aw "기다림"` 결과를 확인 (Android 기기 · API 키 필요)
+
+## 2026-09-16  Claude (claude-code-web / xbtion99) — 후속 2
+- 목표: 사용자가 Termux에서 만난 `cd: No such file or directory` 원인 규명과 수정
+- 원인: 프로그램이 아직 main에 머지되지 않은 PR 브랜치에만 있어 `git clone`이 outputs/ 없는 main을 받음
+- 변경 파일: outputs/abstract-writer/README.md (clone 명령에 -b 브랜치 지정, 이미 clone한 경우 복구 절차 추가)
+- 검증 결과: 실제 GitHub에서 main 얕은 clone으로 오류 재현 확인 · `git fetch --depth 1 origin <branch>` + `git checkout -b aw FETCH_HEAD` 복구 동작 확인 · `--depth 1 -b <branch>` clone(약 28MB)으로 바로 실행됨 확인 · unittest 42 OK · ruff 통과 [샌드박스 검증됨]
+- 결정: 얕은 clone에서는 `git checkout <branch>`가 실패하므로 README는 FETCH_HEAD 방식을 안내한다
+- blocker: 없음
+- 다음 한 가지 행동: 폰에서 수정된 clone 명령으로 재시도 (Android 기기 필요)
+
