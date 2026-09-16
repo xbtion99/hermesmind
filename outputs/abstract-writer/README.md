@@ -49,15 +49,14 @@ bash termux-setup.sh
 `cd: No such file or directory`가 난다. `--depth 1`은 폰에서 받는 양을 줄인다
 (전체 이력은 수만 개 객체, 브랜치 하나만 얕게 받으면 약 28MB).
 
-이미 `main`을 clone 해버렸다면 다시 받을 필요 없이 브랜치만 가져오면 된다.
+이미 `main`을 clone 해버렸다면 다시 받을 필요 없다. 아래 한 줄을 붙여넣으면 된다.
+폰에서는 여러 줄을 붙여넣다 중간에서 끊기기 쉬우므로 한 줄로 두었다.
 
 ```bash
-cd hermesmind
-git fetch --depth 1 origin claude/abstract-deep-writing-program-3q05pn
-git checkout -b aw FETCH_HEAD
-cd outputs/abstract-writer
-bash termux-setup.sh
+cd ~/hermesmind && git fetch --depth 1 origin claude/abstract-deep-writing-program-3q05pn && git checkout -B aw FETCH_HEAD && cd outputs/abstract-writer && bash termux-setup.sh
 ```
+
+얕은 clone에서는 `git checkout <브랜치이름>`이 통하지 않는다. 위처럼 `FETCH_HEAD`를 써야 한다.
 
 `main`에 머지된 뒤에는 `-b` 없이 평범하게 clone 하면 된다.
 
@@ -68,6 +67,13 @@ bash termux-setup.sh
 ```bash
 nano ~/.abstract-writer.env    # ABSTRACT_WRITER_API_KEY= 뒤에 키를 붙여넣는다
 source ~/.bashrc               # 또는 Termux 세션을 새로 연다
+```
+
+키를 넣기 전에 설치가 제대로 됐는지만 먼저 확인하려면 이렇게 한다.
+`--provider mock`은 모델을 호출하지 않으므로 키도 네트워크도 필요 없다.
+
+```bash
+aw "기다림" --provider mock
 ```
 
 이제 폰에서 이렇게 쓴다.
