@@ -8,6 +8,7 @@
 - environment_blockers:
   - (해결됨 2026-09-16) git push 403은 GitHub 앱 권한 부여 후 해소. PR #1 생성: https://github.com/xbtion99/hermesmind/pull/1
   - LLM API 키 없음(샌드박스) → 실제 모델 호출 품질 미검증. Mac에서 `ABSTRACT_WRITER_API_KEY` 설정 후 실행 필요.
+  - 실제 Android/Termux 기기 없음 → termux-setup.sh는 리눅스에서 임시 HOME으로만 검증. 폰에서 1회 실행 확인 필요.
   - pytest는 샌드박스에 없었으나 `uv pip install --system pytest`로 설치 가능했음. stdlib unittest로도 전부 실행됨.
 
 ## 완료 내용 (2026-09-16, claude-code-web / xbtion99)

@@ -11,3 +11,4 @@
 | 2026-09-16 | skills/creative/abstract-deep-writing/SKILL.md | Hermes 스킬 | 프론트매터 YAML 파싱 확인. `hermes -q "..."` 엔드투엔드 미실행 [Mac 재실행 필요] |
 | 2026-09-16 | research/2026-09-16_abstract-deep-writing.md | 방법론 근거 | 출처 링크 미검증 |
 | 2026-09-16 | evaluations/2026-09-16_abstract-writer.md | 첫 평가 | 실제 모델 품질 미측정 [Mac·API 키 필요] |
+| 2026-09-16 | outputs/abstract-writer/termux-setup.sh | 안드로이드(Termux) 1회 설정 스크립트 | bash -n 통과, 임시 HOME으로 2회 실행해 멱등성·alias 동작 확인 [샌드박스 검증됨]. 실제 Termux 미실행 [Android 재실행 필요] |

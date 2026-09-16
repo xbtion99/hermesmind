@@ -7,3 +7,4 @@
 | 2026-09-16 | 프로그램은 `outputs/abstract-writer/`에 의존성 없는 독립 패키지로 두고, Hermes 통합은 얇은 스킬 한 장으로만 한다 | 사용자 운영 지침(outputs/ 정본) 준수. 대형 Hermes 코드베이스에 결합하지 않아 단독 실행·테스트 가능 |
 | 2026-09-16 | 모델 프로바이더는 chat-completions 호환 엔드포인트만 지원한다 (stdlib urllib) | Hermes 사용자 대부분이 OpenRouter/Nous Portal 등 호환 엔드포인트를 씀. SDK 의존성 0 유지 |
 | 2026-09-16 | 감사(audit) 점수 평균은 모델 값이 아니라 재계산한다. 린트 통과도 기본 수락 조건에 포함한다 | 모델의 자기 채점 부풀림 방지, 결정론적 안전망 |
+| 2026-09-16 | 폰 사용 경로로 Termux를 채택하고, `aw` 명령은 cd 대신 PYTHONPATH로 구현한다 | 사용자가 Termux를 선택. cd 방식은 `--out piece.md` 같은 상대경로가 패키지 폴더에 저장되는 footgun이 있었다 |

@@ -29,6 +29,53 @@ export ABSTRACT_WRITER_MODEL=anthropic/claude-sonnet-4.5       # 기본값. 원�
 
 Hermes를 이미 쓰고 있다면 `~/.hermes/.env`의 키와 같은 값을 넣으면 된다.
 
+## 폰에서 쓰기 (Android · Termux)
+
+의존성이 없고 순수 표준 라이브러리만 쓰기 때문에 안드로이드 폰에서 그대로 돌아간다.
+컴파일이 필요한 패키지가 없어 Hermes 본체를 Termux에 설치하는 것보다 훨씬 가볍다 (패키지 크기 약 152KB).
+
+[Termux](https://termux.dev/)를 설치한 뒤 한 번만 실행한다.
+
+```bash
+pkg install -y git python
+git clone https://github.com/xbtion99/hermesmind
+cd hermesmind/outputs/abstract-writer
+bash termux-setup.sh
+```
+
+`termux-setup.sh`가 하는 일은 네 가지다. Python 3.10 이상인지 확인하고, 키 없이 파이프라인이
+도는지 오프라인으로 한 번 돌려보고, `~/.abstract-writer.env`를 만들고, `~/.bashrc`에 `aw` 명령을 추가한다.
+키는 스크립트가 쓰지 않는다. 직접 넣어야 한다.
+
+```bash
+nano ~/.abstract-writer.env    # ABSTRACT_WRITER_API_KEY= 뒤에 키를 붙여넣는다
+source ~/.bashrc               # 또는 Termux 세션을 새로 연다
+```
+
+이제 폰에서 이렇게 쓴다.
+
+```bash
+aw "기다림"                     # 화면에 바로 출력
+aw "기다림" --out piece.md      # 지금 있는 폴더에 저장
+aw --lint piece.md             # 초고 검사. 키도 네트워크도 필요 없다
+```
+
+다른 앱에서 열 수 있게 공유 저장소에 바로 저장하려면 `termux-setup-storage`를 한 번 실행한 뒤
+`--out ~/storage/shared/Documents/piece.md` 처럼 쓴다.
+
+폰에서 특히 쓸모 있는 건 `--lint`다. 모델 호출이 없으므로 비행기 모드에서도, 키가 없어도 돌아간다.
+이동 중에 쓴 초고가 공허한 추상으로 빠졌는지 그 자리에서 확인할 수 있다.
+
+주의할 점 몇 가지.
+
+- `aw` 명령은 설정 당시의 폴더 경로를 기억한다. 폴더를 옮기면 `termux-setup.sh`를 다시 실행한다.
+- 스크립트를 다시 실행해도 안전하다. 이미 있는 키 파일과 `.bashrc` 설정은 건드리지 않는다.
+- `git clone` 대신 `abstract_writer/` 폴더만 복사해도 돌아간다. 그 경우 폴더가 있는 곳에서
+  `python -m abstract_writer "기다림"` 으로 실행한다.
+
+아이폰에는 Termux가 없다. a-Shell 같은 파이썬 앱에 `abstract_writer/` 폴더를 넣거나,
+SSH로 다른 기기에 붙어 실행한다.
+
 ## 사용
 
 ```bash
@@ -119,6 +166,7 @@ abstract-writer/
   METHOD.md                 # 방법론 정본. 프롬프트와 린트는 여기서 파생
   README.md
   pyproject.toml
+  termux-setup.sh           # 안드로이드(Termux) 1회 설정
   abstract_writer/
     cli.py                  # 명령줄
     pipeline.py             # 단계 연결, JSON 관대 파싱, 수락 조건
