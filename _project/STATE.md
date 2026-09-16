@@ -6,6 +6,7 @@
 - claim_started_at:
 - claim_expires_at:
 - environment_blockers:
+  - git push 403: Claude GitHub App이 xbtion99/hermesmind에 설치·연결되어 있지 않음. 커밋은 로컬 브랜치 `claude/abstract-deep-writing-program-3q05pn`에 있음. 사용자가 https://github.com/apps/claude/installations/select_target 에서 앱 설치 또는 https://claude.ai/customize/connectors?auth_start=github&auth_start_force=1 에서 GitHub 재연결 후 다시 푸시 필요.
   - LLM API 키 없음(샌드박스) → 실제 모델 호출 품질 미검증. Mac에서 `ABSTRACT_WRITER_API_KEY` 설정 후 실행 필요.
   - pytest는 샌드박스에 없었으나 `uv pip install --system pytest`로 설치 가능했음. stdlib unittest로도 전부 실행됨.
 
