@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abstract-writer"
+version = "0.1.0"
+description = "Writes abstract prose that earns its abstraction: excavate → compose → lint + audit → revise."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = []
+
+[project.scripts]
+abstract-writer = "abstract_writer.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["abstract_writer*"]
