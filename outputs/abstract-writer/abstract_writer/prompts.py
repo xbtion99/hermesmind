@@ -269,3 +269,52 @@ def revise_user(piece: str, audit: dict, lint_summary: str) -> str:
         f"Editor's audit:\n{json.dumps(audit, ensure_ascii=False, indent=2)}\n\n"
         f"Deterministic lint (advisory):\n{lint_summary}"
     )
+
+def paste_prompt(lang: str, form: str, length: str, register: str, seed: str) -> str:
+    """One self-contained prompt to paste into a chat window.
+
+    No API key, no network. The pipeline's four stages are folded into a single
+    instruction: the model does the excavation privately and returns only the
+    piece. Use it with ChatGPT, Claude, or any chat interface, then bring the
+    result back through `--lint` to check it mechanically.
+    """
+    if lang == "ko":
+        head = "아래 규칙을 지켜서 글 한 편을 써라."
+        task = f"""
+## 주제
+{seed.strip()}
+
+## 순서
+1. 먼저 혼자 정리해라(출력하지 마라): 이 주제를 틀릴 수 있는 질문 하나로 바꾸고,
+   구별 2~3개, 긴장 1개, 구체적인 닻 2~3개, 결과 하나, 마지막 문장 후보 하나.
+2. 그 위에 글을 써라. 구별은 전부 나와야 하고, 닻은 최소 둘이 실제로 주장을 시험해야 한다.
+3. 출력은 글 본문만. 규칙이나 정리 과정은 쓰지 마라. 글에 대한 설명도 붙이지 마라."""
+        tail = "\n이제 글만 출력해라."
+    else:
+        head = "Write one piece, following the rules below."
+        task = f"""
+## Topic
+{seed.strip()}
+
+## Order of work
+1. Work this out privately first, and do not print it: turn the topic into one question
+   that could be answered wrongly, then 2–3 distinctions, one tension, 2–3 concrete
+   anchors, one stake, one candidate final sentence.
+2. Write the piece on top of that. Every distinction appears; at least two anchors
+   actually test a claim.
+3. Output the piece only. No rules, no notes, no explanation of what you did."""
+        tail = "\nNow output the piece only."
+
+    return f"""{head}
+
+{METHOD_CORE[lang]}
+
+## Register
+{REGISTERS[register][lang]}
+
+## Form
+{FORMS[form][lang]}
+Length: {LENGTHS[length][lang]}.
+{task}
+{tail}
+"""

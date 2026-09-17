@@ -37,6 +37,10 @@ MODIFIERS: dict[str, tuple[str, str]] = {
     "fragments": ("form", "fragments"),
     "letter": ("form", "letter"),
     "essay": ("form", "essay"),
+    # mode: print the prompt instead of calling a model
+    "프롬프트": ("mode", "prompt"),
+    "붙여넣기": ("mode", "prompt"),
+    "prompt": ("mode", "prompt"),
     # length
     "짧게": ("length", "short"),
     "길게": ("length", "long"),

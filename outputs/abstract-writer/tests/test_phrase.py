@@ -63,10 +63,31 @@ class ParsePhraseTests(unittest.TestCase):
     def test_every_modifier_maps_to_a_real_option(self):
         from abstract_writer import prompts
         from abstract_writer.phrase import MODIFIERS
-        valid = {"register": prompts.REGISTERS, "form": prompts.FORMS, "length": prompts.LENGTHS}
+        valid = {
+            "register": prompts.REGISTERS,
+            "form": prompts.FORMS,
+            "length": prompts.LENGTHS,
+            # not an Options field: the CLI reads it and changes what it does
+            "mode": {"prompt": None},
+        }
         for word, (field, value) in MODIFIERS.items():
             self.assertIn(field, valid, word)
             self.assertIn(value, valid[field], f"{word} -> {field}={value}")
+
+    def test_options_fields_really_exist(self):
+        from abstract_writer.phrase import MODIFIERS
+        from abstract_writer.pipeline import Options
+        opts = Options()
+        for word, (field, _value) in MODIFIERS.items():
+            if field == "mode":
+                continue
+            self.assertTrue(hasattr(opts, field), f"{word} -> Options has no {field}")
+
+    def test_prompt_mode_modifier(self):
+        self.assertEqual(parse_phrase("저녁 프롬프트"), ("저녁", {"mode": "prompt"}))
+        seed, ov = parse_phrase("저녁 프롬프트 함축 짧게")
+        self.assertEqual(seed, "저녁")
+        self.assertEqual(ov, {"mode": "prompt", "register": "compressed", "length": "short"})
 
 
 if __name__ == "__main__":

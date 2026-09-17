@@ -17,6 +17,39 @@ python3 -m abstract_writer --version        # 그대로 실행
 pip install -e .                             # `abstract-writer` 명령이 생긴다
 ```
 
+## 키 없이 쓰기 (`--prompt`)
+
+API 키가 없거나 결제를 하고 싶지 않다면, 프로그램이 프롬프트만 만들어 준다.
+그걸 ChatGPT나 Claude 같은 챗 창에 붙여넣고, 돌아온 글을 다시 `--lint`로 검사하면 된다.
+방법론은 그대로 적용되고, 네트워크도 키도 쓰지 않는다.
+
+```bash
+python3 -m abstract_writer "저녁" --prompt
+python3 -m abstract_writer "저녁" --prompt --register compressed --form 단상
+```
+
+폰에서는 한글 단어 경로로도 된다.
+
+```
+$ 저녁 프롬프트
+$ 저녁 프롬프트 함축 짧게
+```
+
+Termux에서 클립보드로 바로 보내려면 (`pkg install termux-api` 필요):
+
+```bash
+aw "저녁" --prompt -q --out /dev/stdout | termux-clipboard-set
+```
+
+돌아온 글을 파일로 저장한 뒤 검사한다.
+
+```bash
+aw --lint ~/piece.md --register compressed
+```
+
+이 방식과 키를 넣는 방식의 차이는 하나다. 키가 있으면 감사와 수정 회차가 자동으로 돌고,
+`--prompt`는 한 번에 끝난다. 수정은 챗 창에서 직접 이어서 요청하면 된다.
+
 ## 모델 설정
 
 `/chat/completions` 형식의 아무 엔드포인트나 쓴다 (OpenRouter, Nous Portal, OpenAI, 로컬 서버 등).
@@ -133,6 +166,7 @@ $ 첫눈 단상 짧게
 | 레지스터 | `함축`, `압축` / `설명` |
 | 형식 | `단상`, `편지`, `에세이` |
 | 길이 | `짧게`, `길게`, `보통` |
+| 방식 | `프롬프트` (키 없이 붙여넣기용 프롬프트만 출력) |
 
 같은 갈래를 두 번 쓰면 나중에 친 것이 이긴다. `기다림 짧게 길게`는 길게다.
 수식어는 뒤에서부터 읽다가 수식어가 아닌 단어를 만나면 멈춘다. 그래서 `기다림에 대하여 편지`는
@@ -200,6 +234,7 @@ python3 -m abstract_writer --lint my_essay.md --json
 | `--no-lint-gate` | | 린트 지적이 있어도 통과 허용 |
 | `--provider` | `openai`, `mock` | `openai`는 모든 chat-completions 호환 엔드포인트. 기본값은 `$ABSTRACT_WRITER_PROVIDER` |
 | `--phrase` | 한 줄 | `"기다림 함축 짧게"`처럼 주제와 수식어를 한 번에. 아래 "한글 단어만 치기" 참고 |
+| `--prompt` | | 모델을 부르지 않고 붙여넣을 프롬프트만 출력한다. 키가 필요 없다 |
 | `--trace` | 경로 | 개념 지도, 각 회차의 글·린트·감사 결과를 JSON으로 저장 |
 
 ## 함축 (`--register compressed`)

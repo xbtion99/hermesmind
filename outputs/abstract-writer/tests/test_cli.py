@@ -131,6 +131,57 @@ class CliTests(unittest.TestCase):
             else:
                 os.environ["ABSTRACT_WRITER_PROVIDER"] = old
 
+    def test_prompt_mode_needs_no_key_and_no_network(self):
+        import os
+        saved = dict(os.environ)
+        try:
+            for v in ("ABSTRACT_WRITER_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY"):
+                os.environ.pop(v, None)
+            os.environ["HOME"] = "/nonexistent-home-for-this-test"
+            out = io.StringIO()
+            with redirect_stdout(out), redirect_stderr(io.StringIO()):
+                rc = main(["저녁", "--prompt"])
+            self.assertEqual(rc, 0)
+            text = out.getvalue()
+            self.assertIn("저녁", text)
+            self.assertIn("여섯 원리", text)
+            self.assertNotIn("API 키가 없다", text)
+        finally:
+            os.environ.clear()
+            os.environ.update(saved)
+
+    def test_prompt_mode_carries_the_register(self):
+        outs = {}
+        for reg in ("plain", "compressed"):
+            buf = io.StringIO()
+            with redirect_stdout(buf), redirect_stderr(io.StringIO()):
+                main(["저녁", "--prompt", "--register", reg])
+            outs[reg] = buf.getvalue()
+        self.assertIn("설명을 허용한다", outs["plain"])
+        self.assertIn("논리를 잇는 접속사", outs["compressed"])
+
+    def test_prompt_mode_via_a_bare_phrase(self):
+        out = io.StringIO()
+        with redirect_stdout(out), redirect_stderr(io.StringIO()):
+            rc = main(["--shell-phrase", "저녁 프롬프트 함축"])
+        self.assertEqual(rc, 0)
+        self.assertIn("논리를 잇는 접속사", out.getvalue())
+        self.assertIn("저녁", out.getvalue())
+
+    def test_prompt_mode_writes_to_out(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "p.txt"
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                rc = main(["저녁", "--prompt", "--out", str(path), "-q"])
+            self.assertEqual(rc, 0)
+            self.assertIn("저녁", path.read_text(encoding="utf-8"))
+
+    def test_prompt_mode_english(self):
+        out = io.StringIO()
+        with redirect_stdout(out), redirect_stderr(io.StringIO()):
+            main(["evening", "--prompt", "--lang", "en"])
+        self.assertIn("Six principles", out.getvalue())
+
     def test_missing_seed_is_usage_error(self):
         with redirect_stderr(io.StringIO()):
             self.assertEqual(main([]), 2)

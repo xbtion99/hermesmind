@@ -90,7 +90,12 @@ Open a new Termux session (or run: source ~/.bashrc), then just type a word:
     첫눈 단상 짧게                       fragments, short
 
 Modifiers, all optional, in any order after the topic:
-    함축 / 압축, 설명 · 단상, 편지, 에세이 · 짧게, 길게
+    함축 / 압축, 설명 · 단상, 편지, 에세이 · 짧게, 길게 · 프롬프트
+
+No API key yet? Add 프롬프트 and it prints a prompt to paste into ChatGPT or
+Claude instead of calling anything:
+
+    저녁 프롬프트
 
 The full command form still works when you need flags:
 

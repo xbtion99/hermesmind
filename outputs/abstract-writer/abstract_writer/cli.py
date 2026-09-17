@@ -44,6 +44,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rounds", type=int, default=2, help="max revise rounds (default 2)")
     p.add_argument("--threshold", type=float, default=7.5, help="audit score needed to stop early")
     p.add_argument("--temperature", type=float, default=0.8)
+    p.add_argument("--prompt", action="store_true",
+                   help="모델을 부르지 않고, 챗 창에 붙여넣을 프롬프트만 출력한다. API 키가 필요 없다")
     p.add_argument("--no-audit", action="store_true", help="skip the model audit/revise loop")
     p.add_argument("--no-lint-gate", action="store_true", help="do not require lint to pass")
     p.add_argument("--provider", default=os.environ.get("ABSTRACT_WRITER_PROVIDER", "openai"),
@@ -105,6 +107,8 @@ def main(argv: list[str] | None = None) -> int:
         print("error: a seed is required unless --lint is given", file=sys.stderr)
         return 2
 
+    want_prompt = args.prompt or overrides.pop("mode", None) == "prompt"
+
     lang = args.lang or detect_lang(args.seed)
     opts = Options(
         lang=lang, form=args.form, length=args.length, register=args.register, rounds=args.rounds,
@@ -114,6 +118,21 @@ def main(argv: list[str] | None = None) -> int:
     # Words in the phrase override the flag defaults.
     for field, value in overrides.items():
         setattr(opts, field, value)
+    try:
+        opts.validate()
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    if want_prompt:
+        text = prompts.paste_prompt(opts.lang, opts.form, opts.length, opts.register, args.seed)
+        if args.out:
+            args.out.write_text(text + "\n", encoding="utf-8")
+            if not args.quiet:
+                print(f"[prompt] {args.out}", file=sys.stderr)
+        else:
+            print(text)
+        return 0
     try:
         provider = make_provider(args.provider, model=args.model, base_url=args.base_url)
         result = write(args.seed, provider, opts, audit=not args.no_audit,

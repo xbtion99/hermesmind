@@ -68,3 +68,12 @@
 - blocker: 실제 OpenAI 키로 호출해 보지 못함. gpt-4o가 해당 계정에서 쓸 수 있는 모델인지도 미확인
 - 다음 한 가지 행동: 폰에서 OpenAI 키를 넣고 `저녁` 실행. 모델 오류가 나면 메시지가 알려주는 대로 ABSTRACT_WRITER_MODEL 변경 (API 키 필요)
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 키 없이 쓰는 경로
+- 목표: "GPT 키 넣는 법을 모름, ChatGPT와 연동할까"에 대한 답. ChatGPT 구독은 API 키가 아니므로 연동이 불가능하다. 대신 키 없이 쓰는 길을 만든다
+- 변경 파일: abstract_writer/prompts.py(paste_prompt 신설), abstract_writer/phrase.py(프롬프트 수식어), abstract_writer/cli.py(--prompt), termux-setup.sh, README.md, tests/test_phrase.py, tests/test_cli.py
+- 검증 결과: HOME과 키 환경변수를 모두 제거한 상태에서 프롬프트 출력 확인 · 레지스터·형식·길이가 프롬프트에 반영됨 · 한글 단어 경로(`저녁 프롬프트 함축`)로도 동작 · unittest 132 OK(125→132) · ruff 통과 [샌드박스 검증됨]
+- 결정: 프로젝트 지침 9-2의 "외부 서비스 필요 시 붙여넣기용 프롬프트로 전환" 패턴을 프로그램 기능으로 넣는다. 4단계 파이프라인을 한 프롬프트로 접되, 발굴은 모델이 속으로 하고 글만 출력하도록 지시한다
+- 기존 테스트가 새 mode 필드를 잡음(수식어는 모두 Options 필드여야 한다는 불변식). mode는 CLI 동작이라 테스트를 갱신하고 Options 필드 존재 검사를 따로 추가
+- blocker: 없음. 키 없이 쓸 수 있다
+- 다음 한 가지 행동: 폰에서 `저녁 프롬프트` 출력을 ChatGPT에 붙여넣고, 돌아온 글을 `aw --lint`로 검사 (키 불필요)
+
