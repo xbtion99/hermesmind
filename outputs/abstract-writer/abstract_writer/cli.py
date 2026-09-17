@@ -31,6 +31,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="output language (default: detected from the seed)")
     p.add_argument("--form", choices=list(prompts.FORMS), default="essay")
     p.add_argument("--length", choices=list(prompts.LENGTHS), default="medium")
+    p.add_argument("--register", choices=list(prompts.REGISTERS), default="plain",
+                   help="plain은 설명을 허용하고, compressed(함축)는 접속사와 자기 해설을 금지한다")
     p.add_argument("--rounds", type=int, default=2, help="max revise rounds (default 2)")
     p.add_argument("--threshold", type=float, default=7.5, help="audit score needed to stop early")
     p.add_argument("--temperature", type=float, default=0.8)
@@ -71,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.lint is not None:
         text = args.lint.read_text(encoding="utf-8")
-        report = lint_text(text, args.lang)
+        report = lint_text(text, args.lang, args.register)
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.summary())
         return 0 if report.passed else 1
 
@@ -82,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
 
     lang = args.lang or detect_lang(args.seed)
     opts = Options(
-        lang=lang, form=args.form, length=args.length, rounds=args.rounds,
+        lang=lang, form=args.form, length=args.length, register=args.register, rounds=args.rounds,
         threshold=args.threshold, temperature=args.temperature,
         require_lint_pass=not args.no_lint_gate,
     )

@@ -8,3 +8,5 @@
 | 2026-09-16 | 모델 프로바이더는 chat-completions 호환 엔드포인트만 지원한다 (stdlib urllib) | Hermes 사용자 대부분이 OpenRouter/Nous Portal 등 호환 엔드포인트를 씀. SDK 의존성 0 유지 |
 | 2026-09-16 | 감사(audit) 점수 평균은 모델 값이 아니라 재계산한다. 린트 통과도 기본 수락 조건에 포함한다 | 모델의 자기 채점 부풀림 방지, 결정론적 안전망 |
 | 2026-09-16 | 폰 사용 경로로 Termux를 채택하고, `aw` 명령은 cd 대신 PYTHONPATH로 구현한다 | 사용자가 Termux를 선택. cd 방식은 `--out piece.md` 같은 상대경로가 패키지 폴더에 저장되는 footgun이 있었다 |
+| 2026-09-17 | 함축을 형식(form)이나 길이(length)가 아니라 별도의 레지스터 축으로 둔다 | 여섯 원리는 글이 무엇을 갖출지를 정하고, 레지스터는 그것을 말할지 말지를 정한다. 두 축은 독립적이라 essay/fragments/letter 어디에도 함축을 걸 수 있다 |
+| 2026-09-17 | scaffold_density는 plain에서 기록만 하고 compressed에서만 지적한다 | 접속사와 자기 해설은 plain에서는 미덕이고 compressed에서만 결함이다. 같은 지표를 레지스터에 따라 다르게 해석한다 |

@@ -76,6 +76,12 @@ source ~/.bashrc               # 또는 Termux 세션을 새로 연다
 aw "기다림" --provider mock
 ```
 
+함축 버전도 키 없이 볼 수 있다.
+
+```bash
+aw "기다림" --provider mock --register compressed
+```
+
 이제 폰에서 이렇게 쓴다.
 
 ```bash
@@ -126,12 +132,41 @@ python3 -m abstract_writer --lint my_essay.md --json
 | `--lang` | `ko`, `en` | 출력 언어. 생략하면 시드에서 감지 |
 | `--form` | `essay`, `fragments`, `letter` | 에세이 / 번호 붙은 단상 / 한 사람에게 쓰는 편지 |
 | `--length` | `short`, `medium`, `long` | 대략 600~900자 / 1200~1800자 / 2500~3500자 |
+| `--register` | `plain`, `compressed` | `compressed`(함축)는 접속사와 자기 해설을 금지하고 지정 길이의 60%로 줄인다 |
 | `--rounds` | 정수 | 최대 수정 회차 (기본 2) |
 | `--threshold` | 실수 | 감사 점수가 이 값 이상이고 verdict가 pass이면 조기 종료 (기본 7.5) |
 | `--no-audit` | | 모델 감사·수정 건너뛰기 (작성 1회만) |
 | `--no-lint-gate` | | 린트 지적이 있어도 통과 허용 |
 | `--provider` | `openai`, `mock` | `openai`는 모든 chat-completions 호환 엔드포인트 |
 | `--trace` | 경로 | 개념 지도, 각 회차의 글·린트·감사 결과를 JSON으로 저장 |
+
+## 함축 (`--register compressed`)
+
+같은 여섯 원리로 쓰되 설명을 걷어낸 글을 원할 때 쓴다.
+
+```bash
+python3 -m abstract_writer "기다림" --register compressed
+```
+
+금지하는 것은 네 가지다. 논리 접속사(그러니, 따라서, 즉, 다시 말해), 자기 글을 해설하는 문장
+("두 문장은 충돌한다"), 구별에 이름 붙이기("A가 아니라 B다"), 그리고 길이. 지정 길이의 60% 안에서 끝낸다.
+
+같은 개념 지도에서 나온 두 글을 `examples/`에 나란히 두었다.
+
+| | plain | compressed |
+|---|---|---|
+| 파일 | `examples/waiting_ko.md` | `examples/waiting_ko_compressed.md` |
+| 길이 | 670자 | 330자 |
+| 설명 표지 | 2 | 0 |
+
+함축은 모호함이 아니다. 구별, 닻, 긴장, 결과는 전부 남아 있어야 하고, 말해지지 않을 뿐이다.
+린트는 설명 표지 밀도(`scaffold_density`)만 보므로 둘을 구별하지 못한다. 그 판단은 감사 단계가 한다.
+
+기존 글이 함축 기준에 맞는지 검사할 수도 있다.
+
+```bash
+python3 -m abstract_writer --lint draft.md --register compressed
+```
 
 ## 파이프라인
 
@@ -167,6 +202,7 @@ print(result.final_audit["scores"])
 - **구별 밀도**: "A가 아니라 B", "와 달리", "반면" 같은 표지가 100어절당 0.4개 미만이면 지적
 - **닻 비율**: 구체 단서(사물·장소·시간·숫자·인용)가 없는 단락이 절반을 넘으면 지적
 - **요약형 결말**: 마지막 단락이 "결국", "요컨대", "In conclusion" 으로 시작하면 지적
+- **설명 밀도**: 접속사와 자기 해설 표지의 밀도. `--register compressed`일 때만 지적하고, plain에서는 기록만 한다
 
 임계값은 `abstract_writer/lint.py` 상단에 있고, `METHOD.md` §8의 대조 예시로 보정했다
 (공허한 예시는 반드시 실패, 깊은 예시는 반드시 통과). 어휘 목록은 휴리스틱이다. 오탐이 있으면
@@ -199,7 +235,8 @@ abstract-writer/
     providers.py            # OpenAI 호환 클라이언트, Mock
   tests/
   examples/
-    waiting_ko.md           # 목표 수준을 보여주는 손으로 쓴 참조 예시
+    waiting_ko.md              # 목표 수준을 보여주는 손으로 쓴 참조 예시 (plain)
+    waiting_ko_compressed.md   # 같은 지도, 함축 레지스터
 ```
 
 ## 한계

@@ -64,6 +64,20 @@ CONCRETE_CUES = {
     ],
 }
 
+# Sentences that do the reader's work: logical connectives and commentary the
+# piece makes on its own moves. Harmless in the plain register, fatal in the
+# compressed one (METHOD.md §10).
+SCAFFOLD_MARKERS = {
+    "ko": [
+        "그러니", "그래서", "따라서", "왜냐하면", "즉,", "다시 말해", "바꿔 말하면", "말하자면",
+        "때문이다", "때문에 생긴다", "라는 뜻이다", "라는 말이다", "이는 ", "이것은 ", "그것은 ",
+    ],
+    "en": [
+        "therefore", "thus,", "because of this", "in other words", "that is to say",
+        "which means", "this is why", "as a result", "consequently", "it follows that",
+    ],
+}
+
 SUMMARY_OPENERS = {
     "ko": ["결국", "요컨대", "정리하면", "결론적으로", "종합하면", "다시 말해", "이처럼"],
     "en": ["in conclusion", "to summarize", "in summary", "ultimately,", "overall,",
@@ -130,6 +144,9 @@ class LintReport:
     anchor_ratio: float = 0.0            # anchored / paragraphs
     question_count: int = 0
     summary_ending: bool = False
+    register: str = "plain"
+    scaffold_count: int = 0
+    scaffold_density: float = 0.0        # explanatory markers per 100 words
     flags: list[str] = field(default_factory=list)
 
     @property
@@ -150,6 +167,9 @@ class LintReport:
             "anchor_ratio": round(self.anchor_ratio, 3),
             "question_count": self.question_count,
             "summary_ending": self.summary_ending,
+            "register": self.register,
+            "scaffold_count": self.scaffold_count,
+            "scaffold_density": round(self.scaffold_density, 3),
             "flags": list(self.flags),
             "passed": self.passed,
         }
@@ -161,6 +181,8 @@ class LintReport:
             f"distinctions={self.distinction_count} density={self.distinction_density:.2f}/100w",
             f"anchored paragraphs={self.anchored_paragraphs}/{self.paragraphs} ({self.anchor_ratio:.0%})",
             f"questions={self.question_count} summary_ending={self.summary_ending}",
+            f"register={self.register} scaffolding={self.scaffold_count} "
+            f"({self.scaffold_density:.2f}/100w)",
         ]
         if self.flags:
             lines.append("FLAGS:")
@@ -175,6 +197,7 @@ class LintReport:
 MAX_HOLLOW_DENSITY = 1.0       # unspecified hollow terms per 100 words
 MIN_DISTINCTION_DENSITY = 0.4  # distinction markers per 100 words
 MIN_ANCHOR_RATIO = 0.5         # share of paragraphs with a concrete cue
+MAX_SCAFFOLD_DENSITY = 1.0     # explanatory markers per 100 words, compressed register only
 
 
 def _count_markers(text: str, lang: str) -> int:
@@ -196,14 +219,16 @@ def _has_concrete_cue(paragraph: str, lang: str) -> bool:
     return any(re.search(rf"\b{re.escape(cue)}s?\b", low) for cue in CONCRETE_CUES["en"])
 
 
-def lint_text(text: str, lang: str | None = None) -> LintReport:
+def lint_text(text: str, lang: str | None = None, register: str = "plain") -> LintReport:
     text = _HTML_COMMENT.sub("", text)
     lang = lang or detect_lang(text)
     if lang not in HOLLOW_TERMS:
         lang = "en"
+    if register not in ("plain", "compressed"):
+        register = "plain"
     paragraphs = split_paragraphs(text)
     words = max(word_count(text), 1)
-    report = LintReport(lang=lang, words=words, paragraphs=len(paragraphs))
+    report = LintReport(lang=lang, words=words, paragraphs=len(paragraphs), register=register)
 
     # Hollow vocabulary: a hit is "specified" when the same sentence or the
     # following sentence carries a distinction marker.
@@ -226,6 +251,10 @@ def lint_text(text: str, lang: str | None = None) -> LintReport:
 
     report.question_count = text.count("?") + text.count("？")
 
+    low_all = text.lower()
+    report.scaffold_count = sum(low_all.count(m) for m in SCAFFOLD_MARKERS[lang])
+    report.scaffold_density = report.scaffold_count * 100.0 / words
+
     if paragraphs:
         last = paragraphs[-1].strip().lower()
         report.summary_ending = any(last.startswith(op) for op in SUMMARY_OPENERS[lang])
@@ -245,4 +274,9 @@ def lint_text(text: str, lang: str | None = None) -> LintReport:
         )
     if report.summary_ending:
         report.flags.append("last paragraph opens like a summary instead of a turn")
+    if register == "compressed" and report.scaffold_density > MAX_SCAFFOLD_DENSITY:
+        report.flags.append(
+            f"explanatory scaffolding for a compressed piece "
+            f"({report.scaffold_count} connectives/commentary in {words} words)"
+        )
     return report

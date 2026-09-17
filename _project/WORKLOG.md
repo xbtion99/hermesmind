@@ -25,3 +25,11 @@
 - blocker: 없음
 - 다음 한 가지 행동: 폰에서 수정된 clone 명령으로 재시도 (Android 기기 필요)
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 함축 레지스터
+- 목표: 사용자 요청 "좀더 함축적으로"를 일회성 고쳐쓰기가 아니라 프로그램 기능으로 만든다
+- 변경 파일: abstract_writer/{prompts,lint,pipeline,cli,providers}.py, METHOD.md(§10 신설), README.md, examples/waiting_ko_compressed.md(신규), skills/creative/abstract-deep-writing/SKILL.md(0.2.0), tests/*
+- 검증 결과: 함축 예시가 원본 670자 → 330자, 설명 표지 2 → 0 · compressed 린트 통과 · plain 예시는 plain에서 계속 통과 · mock 엔드투엔드 동작 · unittest 60 OK(42→60) · ruff 통과 [샌드박스 검증됨]
+- 결정: 함축을 form/length와 독립된 레지스터 축으로 분리. scaffold_density는 compressed에서만 지적
+- blocker: 실제 모델이 함축 지시를 얼마나 지키는지 미측정 (API 키 필요)
+- 다음 한 가지 행동: 실제 모델로 plain과 compressed를 같은 주제로 한 편씩 생성해 차이를 evaluations/에 기록 (API 키 필요)
+

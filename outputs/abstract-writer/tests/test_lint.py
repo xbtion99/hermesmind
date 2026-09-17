@@ -124,5 +124,77 @@ class ParagraphTests(unittest.TestCase):
         json.dumps(r.to_dict(), ensure_ascii=False)
 
 
+class RegisterTests(unittest.TestCase):
+    """METHOD.md §10: scaffolding is recorded always, flagged only when compressed."""
+
+    EXPLANATORY = (
+        "기다림에는 두 종류가 있다. 버스는 끝이 정해져 있고 답장은 끝이 상대에게 있다.\n\n"
+        "그러니 시계를 보는 일과 화면을 보는 일은 다르다. 이것은 시간이 세어지는 방향이 "
+        "다르기 때문이다. 다시 말해 길이가 아니라 방향이 문제인 것이다."
+    )
+    IMPLICIT = (
+        "기다림에는 두 종류가 있다. 버스는 끝이 정해져 있다. 답장은 끝이 상대에게 있다.\n\n"
+        "전광판의 숫자가 줄어든다. 3분, 2분, 1분. 손가락이 화면을 다시 켠다.\n\n"
+        "길이가 아니라 방향이었다. 정류장에 남은 것은 시계뿐이다."
+    )
+
+    def test_scaffolding_counted_in_both_registers(self):
+        plain = lint_text(self.EXPLANATORY, "ko", "plain")
+        comp = lint_text(self.EXPLANATORY, "ko", "compressed")
+        self.assertEqual(plain.scaffold_count, comp.scaffold_count)
+        self.assertGreater(plain.scaffold_count, 0)
+
+    def test_scaffolding_flagged_only_when_compressed(self):
+        plain = lint_text(self.EXPLANATORY, "ko", "plain")
+        comp = lint_text(self.EXPLANATORY, "ko", "compressed")
+        self.assertFalse(any("scaffolding" in f for f in plain.flags), plain.flags)
+        self.assertTrue(any("scaffolding" in f for f in comp.flags), comp.flags)
+
+    def test_implicit_prose_passes_compressed(self):
+        r = lint_text(self.IMPLICIT, "ko", "compressed")
+        self.assertEqual(r.scaffold_count, 0)
+        self.assertTrue(r.passed, r.flags)
+
+    def test_english_scaffolding(self):
+        text = ("There are two kinds of waiting. A bus has a fixed end.\n\n"
+                "Therefore the clock and the screen are different. In other words, "
+                "which means the direction is what matters, not the length of the room.")
+        r = lint_text(text, "en", "compressed")
+        self.assertGreater(r.scaffold_count, 0)
+        self.assertTrue(any("scaffolding" in f for f in r.flags))
+
+    def test_unknown_register_falls_back_to_plain(self):
+        r = lint_text(self.EXPLANATORY, "ko", "함축")
+        self.assertEqual(r.register, "plain")
+        self.assertFalse(any("scaffolding" in f for f in r.flags))
+
+    def test_register_in_report_dict_and_summary(self):
+        r = lint_text(self.IMPLICIT, "ko", "compressed")
+        self.assertEqual(r.to_dict()["register"], "compressed")
+        self.assertIn("register=compressed", r.summary())
+
+
+class ReferenceExampleTests(unittest.TestCase):
+    """The two shipped reference pieces must keep passing their own register."""
+
+    import pathlib as _pathlib
+    EXAMPLES = _pathlib.Path(__file__).resolve().parent.parent / "examples"
+
+    def test_plain_reference_passes_plain(self):
+        text = (self.EXAMPLES / "waiting_ko.md").read_text(encoding="utf-8")
+        self.assertTrue(lint_text(text, "ko", "plain").passed)
+
+    def test_compressed_reference_passes_compressed(self):
+        text = (self.EXAMPLES / "waiting_ko_compressed.md").read_text(encoding="utf-8")
+        r = lint_text(text, "ko", "compressed")
+        self.assertTrue(r.passed, r.flags)
+        self.assertEqual(r.scaffold_count, 0)
+
+    def test_compressed_reference_is_shorter(self):
+        plain = (self.EXAMPLES / "waiting_ko.md").read_text(encoding="utf-8")
+        comp = (self.EXAMPLES / "waiting_ko_compressed.md").read_text(encoding="utf-8")
+        self.assertLess(lint_text(comp, "ko").words, lint_text(plain, "ko").words)
+
+
 if __name__ == "__main__":
     unittest.main()

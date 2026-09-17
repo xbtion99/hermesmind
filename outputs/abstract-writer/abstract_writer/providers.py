@@ -129,6 +129,35 @@ _MOCK_PIECE_KO = """# 두 종류의 기다림
 
 그러니 누군가 기다리기 힘들다고 말할 때, 얼마나 오래 기다렸는지 묻는 것은 잘못된 질문이다. 물어야 할 것은 그 기다림의 끝이 누구에게 있는가이다. 힘든 것은 길이가 아니라 방향이었다."""
 
+_MOCK_PIECE_KO_COMPRESSED = """# 두 종류의 기다림
+
+기다림에는 두 종류가 있다. 버스는 끝이 정해져 있다. 답장은 끝이 상대에게 있다.
+
+전광판의 숫자가 줄어든다. 3분, 2분, 1분. 시계와 내가 같은 방향으로 간다.
+
+읽음 표시가 없는 화면은 줄어들지 않는다. 손가락이 화면을 다시 켠다. 한 시간이 지나면 한 시간만큼의 침묵이 늘어난다.
+
+기다림은 아무것도 하지 않는 시간이라고들 한다. 발은 멈춰 있고 눈은 숫자를 세고 있다. 한 단어가 몸과 마음을 한꺼번에 부른다.
+
+누가 기다리기 힘들다고 말한다. 정류장에서든 방에서든, 얼마나 오래인지는 답이 아니다. 그 끝이 누구에게 있는가.
+
+길이가 아니라 방향이었다."""
+
+_MOCK_PIECE_EN_COMPRESSED = """# Two Kinds of Waiting
+
+There are two kinds of waiting. A bus has a fixed end. A reply has an end that belongs to someone else.
+
+The number on the display drops. Three minutes, two, one. The clock and I run the same way.
+
+A screen with no read receipt does not drop. A thumb wakes it again. An hour passing adds an hour of silence.
+
+Waiting is time in which nothing happens, people say. The feet are still and the eyes are counting the display.
+One word calls the body and the mind at once.
+
+Someone says waiting is hard. At the stop or in the room, how long is not the answer. Whose the end is.
+
+It was never the length."""
+
 _MOCK_MAP_EN = {
     "question": "Is waiting hard because the time is long, or because we do not know which way it is being counted?",
     "distinctions": [
@@ -171,10 +200,13 @@ class MockProvider:
         self.calls += 1
         stage = system.split("]", 1)[0].removeprefix("[STAGE:") if system.startswith("[STAGE:") else "unknown"
         lang = "ko" if "Write in Korean" in system or "values in Korean" in system else "en"
+        register = "compressed" if "[REGISTER:compressed]" in system else "plain"
         self.log.append((stage, lang))
         if stage == "excavate":
             return json.dumps(_MOCK_MAP_KO if lang == "ko" else _MOCK_MAP_EN, ensure_ascii=False)
         if stage == "compose":
+            if register == "compressed":
+                return _MOCK_PIECE_KO_COMPRESSED if lang == "ko" else _MOCK_PIECE_EN_COMPRESSED
             return _MOCK_PIECE_KO if lang == "ko" else _MOCK_PIECE_EN
         if stage == "audit":
             self.audits += 1
@@ -192,6 +224,15 @@ class MockProvider:
                 "overall": 8.67, "issues": [], "verdict": "pass",
             })
         if stage == "revise":
+            if register == "compressed":
+                # A compressed revise tightens rather than adds.
+                if lang == "ko":
+                    return _MOCK_PIECE_KO_COMPRESSED.replace(
+                        "정류장에서든 방에서든, 얼마나 오래인지는 답이 아니다.",
+                        "정류장에서든 방에서든. 얼마나 오래인지는 답이 아니다.")
+                return _MOCK_PIECE_EN_COMPRESSED.replace(
+                    "At the stop or in the room, how long is not the answer.",
+                    "At the stop, in the room. How long is not the answer.")
             # Apply the one fix the first audit asked for, so tests can see a change.
             if lang == "ko":
                 return _MOCK_PIECE_KO.replace(

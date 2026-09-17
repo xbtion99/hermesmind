@@ -31,6 +31,40 @@ LENGTHS = {
     "long": {"ko": "2500~3500자", "en": "1500–2000 words"},
 }
 
+REGISTERS = {
+    "plain": {
+        "ko": "설명을 허용한다. 구별과 긴장을 문장으로 분명히 말해도 좋다.",
+        "en": "Explanation is allowed. You may state the distinctions and the tension outright.",
+    },
+    "compressed": {
+        "ko": """함축. 아래 제약을 형식 제약보다 우선한다.
+
+- **논리를 잇는 접속사를 쓰지 마라.** 그러니, 그래서, 따라서, 왜냐하면, 즉, 다시 말해, 때문이다, 이것은 ~이다.
+  문장을 병치하고 사이를 비워 둬라. 독자가 잇는다.
+- **자기 글을 설명하는 문장을 쓰지 마라.** "두 문장은 충돌한다", "이는 ~라는 뜻이다" 같은 해설은 삭제한다.
+  충돌은 두 문장을 나란히 놓아 보여 주고 이름 붙이지 않는다.
+- **구별에 이름을 붙이지 마라.** "A가 아니라 B다"라고 선언하는 대신, A의 장면과 B의 장면을 붙여 놓아 차이가
+  저절로 드러나게 한다.
+- 문장을 짧게. 지정한 길이의 60% 안에서 끝낸다. 남은 40%는 침묵이다.
+- 마지막 문장은 설명하지 않는다. 앞을 다시 읽게 만들고 끝낸다.
+
+함축은 모호함이 아니다. 구별, 닻, 긴장, 결과는 그대로 있어야 한다. 말해지지 않을 뿐이다.""",
+        "en": """Compressed. These constraints outrank the form constraints.
+
+- **No logical connectives.** therefore, thus, so, because, that is, in other words, which means, this is why.
+  Set sentences side by side and leave the join empty. The reader makes it.
+- **No sentence that explains your own piece.** Delete commentary like "the two sentences collide" or
+  "which means that". Show the collision by placing the two sentences together; do not name it.
+- **Do not name the distinction.** Instead of declaring "not A but B", put the scene of A beside the scene of B
+  and let the difference appear on its own.
+- Short sentences. Finish inside 60% of the stated length. The other 40% is silence.
+- The last sentence explains nothing. It sends the reader back to the opening and stops.
+
+Compressed is not vague. The distinction, the anchors, the tension and the stake must all still be there.
+They are simply not said.""",
+    },
+}
+
 METHOD_CORE = {
     "ko": """\
 ## 추상적이지만 깊이 있는 글의 여섯 원리
@@ -142,12 +176,15 @@ Rules: 2–3 distinctions, 2–3 anchors. Anchors must be mundane and specific (
 Return only the JSON object. No prose, no code fence."""
 
 
-def compose_system(lang: str, form: str, length: str) -> str:
+def compose_system(lang: str, form: str, length: str, register: str = "plain") -> str:
     L = LANG_NAMES[lang]
-    return f"""[STAGE:compose]
+    return f"""[STAGE:compose][REGISTER:{register}]
 You write abstract prose that earns its abstraction. Write in {L}.
 
 {METHOD_CORE[lang]}
+
+## Register
+{REGISTERS[register][lang]}
 
 ## Form
 {FORMS[form][lang]}
@@ -161,9 +198,9 @@ Do not mention the map, the method, or that you are following rules. Do not expl
 Output only the piece in Markdown."""
 
 
-def audit_system(lang: str) -> str:
+def audit_system(lang: str, register: str = "plain") -> str:
     L = LANG_NAMES[lang]
-    return f"""[STAGE:audit]
+    return f"""[STAGE:audit][REGISTER:{register}]
 You are a severe editor. You grade a piece of abstract prose against six principles and you quote the exact places where it fails.
 
 {METHOD_CORE[lang]}
@@ -175,6 +212,10 @@ You are a severe editor. You grade a piece of abstract prose against six princip
 - stake: is it clear what changes for the reader?
 - turn: does the ending change how the opening reads, rather than summarize?
 - hollow: 10 means no watched vocabulary left unspecified; each unspecified hit costs 2 points.
+
+Register for this piece: {REGISTERS[register][lang]}
+When the register is compressed, a sentence that explains the piece's own moves, or a logical connective that
+does the reader's work, is an issue worth reporting even if everything else is sound.
 
 overall = mean of the six.
 
@@ -189,12 +230,15 @@ Quote precisely; the next stage patches by your quotes. List at most 6 issues, m
 Return only the JSON object. No prose, no code fence."""
 
 
-def revise_system(lang: str, form: str, length: str) -> str:
+def revise_system(lang: str, form: str, length: str, register: str = "plain") -> str:
     L = LANG_NAMES[lang]
-    return f"""[STAGE:revise]
+    return f"""[STAGE:revise][REGISTER:{register}]
 You revise a piece of abstract prose so that it honors the six principles. Write in {L}.
 
 {METHOD_CORE[lang]}
+
+## Register
+{REGISTERS[register][lang]}
 
 ## Form
 {FORMS[form][lang]}

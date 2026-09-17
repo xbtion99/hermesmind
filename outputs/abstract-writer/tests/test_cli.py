@@ -46,6 +46,38 @@ class CliTests(unittest.TestCase):
                 rc = main(["--lint", str(good)])
             self.assertEqual(rc, 0)
 
+    def test_register_flag_changes_output(self):
+        outs = {}
+        for reg in ("plain", "compressed"):
+            buf = io.StringIO()
+            with redirect_stdout(buf), redirect_stderr(io.StringIO()):
+                rc = main(["기다림", "--provider", "mock", "--register", reg, "-q"])
+            self.assertEqual(rc, 0)
+            outs[reg] = buf.getvalue()
+        self.assertNotEqual(outs["plain"], outs["compressed"])
+        self.assertLess(len(outs["compressed"]), len(outs["plain"]))
+
+    def test_lint_mode_honors_register(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "explanatory.md"
+            f.write_text(
+                "버스가 아니라 답장을 기다린다. 그러니 시계는 소용이 없다. "
+                "이것은 방향의 문제이기 때문이다. 다시 말해 길이가 아니다.",
+                encoding="utf-8")
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(main(["--lint", str(f), "--lang", "ko"]), 0)
+            out = io.StringIO()
+            with redirect_stdout(out):
+                rc = main(["--lint", str(f), "--lang", "ko", "--register", "compressed", "--json"])
+            self.assertEqual(rc, 1)
+            report = json.loads(out.getvalue())
+            self.assertEqual(report["register"], "compressed")
+            self.assertTrue(any("scaffolding" in f for f in report["flags"]))
+
+    def test_bad_register_is_argparse_error(self):
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            main(["기다림", "--register", "함축"])
+
     def test_missing_seed_is_usage_error(self):
         with redirect_stderr(io.StringIO()):
             self.assertEqual(main([]), 2)

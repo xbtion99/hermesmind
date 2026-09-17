@@ -99,6 +99,49 @@ class MockPipelineTests(unittest.TestCase):
             write("x", MockProvider(), Options(form="sonnet"))
 
 
+class RegisterPipelineTests(unittest.TestCase):
+    def test_compressed_register_reaches_compose_and_audit(self):
+        captured = []
+
+        class Spy(MockProvider):
+            def complete(self, system, user, **kw):
+                captured.append(system)
+                return super().complete(system, user, **kw)
+
+        res = write("기다림", Spy(), Options(lang="ko", register="compressed"))
+        compose = next(s for s in captured if s.startswith("[STAGE:compose]"))
+        audit = next(s for s in captured if s.startswith("[STAGE:audit]"))
+        self.assertIn("[REGISTER:compressed]", compose)
+        self.assertIn("[REGISTER:compressed]", audit)
+        self.assertEqual(res.final_lint.register, "compressed")
+
+    def test_compressed_output_differs_from_plain(self):
+        plain = write("기다림", MockProvider(), Options(lang="ko", register="plain"))
+        comp = write("기다림", MockProvider(), Options(lang="ko", register="compressed"))
+        self.assertNotEqual(plain.text, comp.text)
+        self.assertLess(len(comp.text), len(plain.text))
+
+    def test_compressed_piece_passes_its_own_lint(self):
+        res = write("기다림", MockProvider(), Options(lang="ko", register="compressed"))
+        self.assertTrue(res.final_lint.passed, res.final_lint.flags)
+        self.assertEqual(res.final_lint.scaffold_count, 0)
+
+    def test_compressed_english(self):
+        res = write("waiting", MockProvider(), Options(lang="en", register="compressed"))
+        self.assertTrue(res.text.startswith("# Two Kinds of Waiting"))
+        self.assertTrue(res.final_lint.passed, res.final_lint.flags)
+
+    def test_bad_register_rejected(self):
+        with self.assertRaises(ValueError):
+            write("기다림", MockProvider(), Options(register="함축"))
+
+    def test_register_recorded_in_trace(self):
+        res = write("기다림", MockProvider(), Options(lang="ko", register="compressed"))
+        trace = res.to_trace()
+        self.assertEqual(trace["options"]["register"], "compressed")
+        self.assertEqual(trace["rounds"][-1]["lint"]["register"], "compressed")
+
+
 class ProviderFactoryTests(unittest.TestCase):
     def test_mock(self):
         self.assertIsInstance(make_provider("mock"), MockProvider)

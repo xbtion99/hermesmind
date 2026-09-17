@@ -74,6 +74,7 @@ class Options:
     lang: str = "ko"
     form: str = "essay"
     length: str = "medium"
+    register: str = "plain"    # "plain" or "compressed" (함축)
     rounds: int = 2            # maximum revise rounds
     threshold: float = 7.5     # audit overall needed to stop early
     temperature: float = 0.8
@@ -86,6 +87,8 @@ class Options:
             raise ValueError(f"form must be one of {list(prompts.FORMS)}")
         if self.length not in prompts.LENGTHS:
             raise ValueError(f"length must be one of {list(prompts.LENGTHS)}")
+        if self.register not in prompts.REGISTERS:
+            raise ValueError(f"register must be one of {list(prompts.REGISTERS)}")
         if self.rounds < 0:
             raise ValueError("rounds must be >= 0")
         return self
@@ -163,17 +166,17 @@ def write(seed: str, provider: Provider, options: Options | None = None,
     result = Result(seed=seed, options=opts, concept_map=cmap)
 
     # 2. COMPOSE
-    piece = provider.complete(prompts.compose_system(opts.lang, opts.form, opts.length),
+    piece = provider.complete(prompts.compose_system(opts.lang, opts.form, opts.length, opts.register),
                               prompts.compose_user(seed, cmap),
                               temperature=opts.temperature, max_tokens=4000).strip()
     emit("compose", piece)
 
     for idx in range(opts.rounds + 1):
-        lint = lint_text(piece, opts.lang)
+        lint = lint_text(piece, opts.lang, opts.register)
         emit("lint", lint)
         audit_obj: dict | None = None
         if audit:
-            raw = provider.complete(prompts.audit_system(opts.lang),
+            raw = provider.complete(prompts.audit_system(opts.lang, opts.register),
                                     prompts.audit_user(piece, lint.summary()),
                                     temperature=0.2, max_tokens=1500)
             audit_obj = validate_audit(parse_json_lenient(raw))
@@ -192,7 +195,7 @@ def write(seed: str, provider: Provider, options: Options | None = None,
             break
 
         # 3. REVISE
-        piece = provider.complete(prompts.revise_system(opts.lang, opts.form, opts.length),
+        piece = provider.complete(prompts.revise_system(opts.lang, opts.form, opts.length, opts.register),
                                   prompts.revise_user(piece, audit_obj, lint.summary()),
                                   temperature=opts.temperature, max_tokens=4000).strip()
         emit("revise", piece)

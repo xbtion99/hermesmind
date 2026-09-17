@@ -24,6 +24,11 @@
 
 - 가장 중요한 문제: **실제 모델 출력 품질이 미측정**이다. 파이프라인·린트·CLI는 검증됐지만 "글이 정말 깊은가"는 mock으로는 알 수 없다.
 
+## 추가 (2026-09-17)
+
+- 함축 레지스터(`--register compressed`) 추가. METHOD.md §10이 정본. 테스트 60개.
+- Termux 설치 경로 확인됨 (사용자 폰에서 동작 확인).
+
 ## 다음 계정이 할 정확히 한 가지 행동
 
 Mac에서 `ABSTRACT_WRITER_API_KEY`를 설정하고 `cd outputs/abstract-writer && python3 -m abstract_writer "기다림" --trace examples/waiting.trace.json --out examples/waiting_model.md`를 실행해 결과와 감사 점수를 `evaluations/`에 기록한다 (API 키 필요).

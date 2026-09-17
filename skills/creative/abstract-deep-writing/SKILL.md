@@ -1,7 +1,7 @@
 ---
 name: abstract-deep-writing
 description: "Write abstract prose that has depth: distinctions, anchors, tension, a turn — not hollow big words."
-version: 0.1.0
+version: 0.2.0
 author: hermesmind
 license: MIT
 platforms: [linux, macos, windows]
@@ -57,6 +57,35 @@ Do the excavation **before** writing a sentence of the piece, and show it to the
 4. **Revise** only the quoted places. Do not add a summary paragraph. Do not add hedges.
 5. Deliver the piece alone. Do not explain the method or the map unless asked.
 
+## Register: explain or imply
+
+The six principles decide what the piece must *have*. Whether you *say* it is a separate choice.
+
+**Plain** (default) states the distinctions and the tension outright. Easier to follow on a first read.
+
+**Compressed** (함축) keeps every principle and strips the explanation. Ask for it when the user says
+"함축적으로", "더 압축해서", "설명 빼고", "more implicit", "tighter". Four bans:
+
+1. No logical connectives: 그러니, 그래서, 따라서, 왜냐하면, 즉, 다시 말해 / therefore, thus, because, in other words.
+2. No sentence that comments on your own piece: "두 문장은 충돌한다", "which means that".
+3. Do not name the distinction. Put the scene of A beside the scene of B and let the difference appear.
+4. Finish inside 60% of the length you would otherwise write. The other 40% is silence.
+
+Compressed is not vague. Vague prose has no principles; compressed prose has them and leaves them unsaid.
+
+Same map, two registers:
+
+> **Plain.** 기다림에는 두 종류가 있다. 하나는 버스를 기다리는 것처럼 끝이 정해진 기다림이고, 다른 하나는
+> 답장을 기다리는 것처럼 끝이 상대에게 달린 기다림이다. 우리는 둘을 같은 동사로 부르지만, 정류장에서
+> 전광판의 남은 분을 보는 사람과 읽음 표시를 확인하는 손가락은 서로 다른 일을 하고 있다.
+
+> **Compressed.** 기다림에는 두 종류가 있다. 버스는 끝이 정해져 있다. 답장은 끝이 상대에게 있다.
+>
+> 전광판의 숫자가 줄어든다. 3분, 2분, 1분. 시계와 내가 같은 방향으로 간다.
+
+The second drops the commentary ("우리는 둘을 같은 동사로 부르지만", "서로 다른 일을 하고 있다") and keeps
+the distinction, the anchors and the direction.
+
 ## Style
 
 Plain. No exclamations, no rhetorical inflation, no rhythmic lists of three. One thought per sentence; mix short and long.
@@ -78,7 +107,8 @@ stake (what "hard" means changes), turn (length → direction).
 ## Standalone program
 
 The same method runs as a pipeline with a deterministic lint in this repository at
-`outputs/abstract-writer/` (`python3 -m abstract_writer "seed"`; `--lint file.md` checks an existing draft).
+`outputs/abstract-writer/` (`python3 -m abstract_writer "seed"`; `--register compressed` for 함축;
+`--lint file.md` checks an existing draft).
 Use it when the user wants batch generation, a trace of each stage, or a mechanical check of a draft.
 `outputs/abstract-writer/METHOD.md` is the canonical statement of the method; keep this skill in sync with it.
 
