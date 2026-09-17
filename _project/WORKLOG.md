@@ -86,3 +86,12 @@
 - 다음 한 가지 행동: 폰에서 pull 후 `버거킹 단상` 실행, 나온 프롬프트를 ChatGPT에 붙여넣기 (키 불필요)
 - 사고: 위 커밋(9af24c3)을 테스트 1건 실패 상태로 푸시했다. `python3 -m unittest ... | tail -3 && git push` 형태라 파이프 끝의 tail이 0을 반환해 && 체인이 실패를 막지 못했다. 다음 커밋(테스트 문구 갱신)으로 초록 복구. 이후 검증 명령에는 set -o pipefail을 쓴다
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 복사된 셸 표시가 주제로 들어감
+- 목표: 폰에서 프롬프트는 나왔으나 주제가 "$ 버거킹"이 됨
+- 원인: 내가 README와 답변의 예시에 셸 표시 `$ `를 붙여 썼다. 사용자가 그대로 복사해 붙여넣으면 `$`가 인자로 들어오고, 비ASCII가 섞여 있어 훅이 통과시킨다
+- 변경 파일: abstract_writer/phrase.py(선행 프롬프트 기호 제거), abstract_writer/prompts.py(한국어 경로의 Register/Form/Length 제목을 한글로), README.md·termux-setup.sh(예시에서 $ 제거), tests/test_phrase.py, tests/test_cli.py
+- 검증 결과: "$ 버거킹 단상" → 주제 "버거킹", 형식 fragments 실측 · 마지막 토큰은 절대 지우지 않아 "$" 하나만 쳐도 주제로 남음 · 주제 중간의 $는 보존 · 프롬프트 제목이 한국어 경로에서 한글로 · unittest 141 OK(135→141) · ruff 통과 [샌드박스 검증됨]
+- 결정: 문서 예시에 셸 표시를 쓰지 않는다. 코드도 선행 기호($ > % # » ❯)를 떼어내되 마지막 토큰은 건드리지 않는다
+- blocker: 없음
+- 다음 한 가지 행동: 폰에서 pull 후 `버거킹 단상`, 나온 프롬프트를 ChatGPT에 붙여넣고 결과를 aw --lint로 검사 (키 불필요)
+

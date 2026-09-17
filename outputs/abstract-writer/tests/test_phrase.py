@@ -83,6 +83,20 @@ class ParsePhraseTests(unittest.TestCase):
                 continue
             self.assertTrue(hasattr(opts, field), f"{word} -> Options has no {field}")
 
+    def test_copied_shell_prompt_marker_is_dropped(self):
+        # Someone copies "$ 버거킹 단상" out of a README, prompt character and all.
+        self.assertEqual(parse_phrase("$ 버거킹 단상"), ("버거킹", {"form": "fragments"}))
+        self.assertEqual(parse_phrase("> 저녁 함축"), ("저녁", {"register": "compressed"}))
+        self.assertEqual(parse_phrase("% waiting"), ("waiting", {}))
+        self.assertEqual(parse_phrase("❯ 저녁"), ("저녁", {}))
+
+    def test_marker_alone_is_still_a_seed(self):
+        # Never strip the last token, so nothing silently becomes empty.
+        self.assertEqual(parse_phrase("$"), ("$", {}))
+
+    def test_marker_inside_the_seed_is_kept(self):
+        self.assertEqual(parse_phrase("돈과 $ 사이"), ("돈과 $ 사이", {}))
+
     def test_prompt_mode_modifier(self):
         self.assertEqual(parse_phrase("저녁 프롬프트"), ("저녁", {"mode": "prompt"}))
         seed, ov = parse_phrase("저녁 프롬프트 함축 짧게")

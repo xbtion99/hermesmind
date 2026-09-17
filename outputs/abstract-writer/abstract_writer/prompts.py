@@ -305,16 +305,20 @@ def paste_prompt(lang: str, form: str, length: str, register: str, seed: str) ->
 3. Output the piece only. No rules, no notes, no explanation of what you did."""
         tail = "\nNow output the piece only."
 
+    labels = {
+        "ko": ("## 레지스터", "## 형식", "길이"),
+        "en": ("## Register", "## Form", "Length"),
+    }[lang]
     return f"""{head}
 
 {METHOD_CORE[lang]}
 
-## Register
+{labels[0]}
 {REGISTERS[register][lang]}
 
-## Form
+{labels[1]}
 {FORMS[form][lang]}
-Length: {LENGTHS[length][lang]}.
+{labels[2]}: {LENGTHS[length][lang]}.
 {task}
 {tail}
 """

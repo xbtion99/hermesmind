@@ -239,6 +239,33 @@ class CliTests(unittest.TestCase):
                 os.environ.clear()
                 os.environ.update(saved)
 
+    def test_prompt_headings_are_korean_on_the_korean_path(self):
+        out = io.StringIO()
+        with redirect_stdout(out), redirect_stderr(io.StringIO()):
+            main(["저녁", "--prompt"])
+        text = out.getvalue()
+        self.assertIn("## 레지스터", text)
+        self.assertIn("## 형식", text)
+        self.assertIn("길이:", text)
+        self.assertNotIn("## Register", text)
+
+    def test_prompt_headings_are_english_on_the_english_path(self):
+        out = io.StringIO()
+        with redirect_stdout(out), redirect_stderr(io.StringIO()):
+            main(["evening", "--prompt", "--lang", "en"])
+        text = out.getvalue()
+        self.assertIn("## Register", text)
+        self.assertIn("Length:", text)
+
+    def test_copied_prompt_marker_does_not_reach_the_seed(self):
+        out = io.StringIO()
+        with redirect_stdout(out), redirect_stderr(io.StringIO()):
+            rc = main(["--shell-phrase", "$ 버거킹 단상", "--prompt"])
+        self.assertEqual(rc, 0)
+        text = out.getvalue()
+        self.assertIn("## 주제\n버거킹", text)
+        self.assertNotIn("$ 버거킹", text)
+
     def test_missing_seed_is_usage_error(self):
         with redirect_stderr(io.StringIO()):
             self.assertEqual(main([]), 2)

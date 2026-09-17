@@ -83,7 +83,8 @@ fi
 
 say "Done"
 cat <<'DONEEOF'
-Open a new Termux session (or run: source ~/.bashrc), then just type a word:
+Open a new Termux session (or run: source ~/.bashrc), then just type a word.
+Type the topic only; there is no command and no quotes.
 
     기다림                               write a piece about it
     기다림 함축                          the implicit version

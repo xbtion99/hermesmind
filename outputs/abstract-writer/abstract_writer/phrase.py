@@ -55,12 +55,19 @@ def has_hangul(text: str) -> bool:
     return bool(_HANGUL.search(text))
 
 
+# People copy examples out of a README along with the prompt character in
+# front of them, and the shell passes it straight through.
+PROMPT_MARKERS = {"$", ">", "%", "#", "»", "❯"}
+
+
 def parse_phrase(phrase: str) -> tuple[str, dict[str, str]]:
     """Split a phrase into (seed, overrides).
 
     Raises ValueError when nothing is left to write about.
     """
     tokens = phrase.split()
+    while len(tokens) > 1 and tokens[0] in PROMPT_MARKERS:
+        tokens.pop(0)
     if not tokens:
         raise ValueError("빈 입력입니다")
 
