@@ -59,3 +59,12 @@
 - blocker: 사용자가 키를 직접 넣어야 한다. 대신할 수 없음
 - 다음 한 가지 행동: 폰에서 nano ~/.abstract-writer.env 로 키를 넣고 `저녁` 실행 (API 키 필요)
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 키 종류별 엔드포인트 자동 선택
+- 목표: "GPT 키를 넣을까"에 대한 답. 키만 넣어도 맞는 엔드포인트로 가게 한다
+- 문제: 기본 base_url이 OpenRouter, 기본 모델이 anthropic/claude-sonnet-4.5였다. OpenAI 키를 넣으면 401만 뜨고 원인을 알 수 없다. 게다가 예전 키 파일 템플릿이 그 두 값을 export로 박아 두어 사용자 환경에 이미 들어가 있다
+- 변경 파일: abstract_writer/endpoints.py(신규), abstract_writer/keys.py(FoundKey에 var 추가), abstract_writer/providers.py(resolve 사용 + 401/404 메시지), termux-setup.sh(템플릿에서 base/model 주석 처리), README.md, tests/test_endpoints.py(신규), tests/test_keys.py
+- 검증 결과: 예전 템플릿 값이 환경에 있는 상태에서 OpenAI 키 → api.openai.com/gpt-4o, OpenRouter 키 → openrouter/claude-sonnet 실측 · 직접 지정한 base/model은 유지 · 401/404 메시지가 현재 값과 바꿀 변수명을 지목 · unittest 125 OK(107→125) · ruff 통과 [샌드박스 검증됨]
+- 결정: "기본값과 같은 값은 사용자가 정한 것으로 치지 않는다". 이래야 이미 배포된 키 파일의 낡은 기본값이 자동 선택을 막지 않는다
+- blocker: 실제 OpenAI 키로 호출해 보지 못함. gpt-4o가 해당 계정에서 쓸 수 있는 모델인지도 미확인
+- 다음 한 가지 행동: 폰에서 OpenAI 키를 넣고 `저녁` 실행. 모델 오류가 나면 메시지가 알려주는 대로 ABSTRACT_WRITER_MODEL 변경 (API 키 필요)
+

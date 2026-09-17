@@ -58,18 +58,20 @@ class FindApiKeyTests(unittest.TestCase):
             Path(d, ".abstract-writer.env").write_text("ABSTRACT_WRITER_API_KEY=from-file\n",
                                                        encoding="utf-8")
             with clean_env(HOME=d, ABSTRACT_WRITER_API_KEY="from-env"):
-                key, where = find_api_key()
-                self.assertEqual(key, "from-env")
-                self.assertEqual(where, "$ABSTRACT_WRITER_API_KEY")
+                found = find_api_key()
+                self.assertEqual(found.key, "from-env")
+                self.assertEqual(found.origin, "$ABSTRACT_WRITER_API_KEY")
+                self.assertEqual(found.var, "ABSTRACT_WRITER_API_KEY")
 
     def test_own_file_is_read_without_sourcing(self):
         with tempfile.TemporaryDirectory() as d:
             Path(d, ".abstract-writer.env").write_text(
                 "export ABSTRACT_WRITER_API_KEY=from-own\n", encoding="utf-8")
             with clean_env(HOME=d):
-                key, where = find_api_key()
-                self.assertEqual(key, "from-own")
-                self.assertIn(".abstract-writer.env", where)
+                found = find_api_key()
+                self.assertEqual(found.key, "from-own")
+                self.assertIn(".abstract-writer.env", found.origin)
+                self.assertEqual(found.var, "ABSTRACT_WRITER_API_KEY")
 
     def test_own_file_beats_hermes(self):
         with tempfile.TemporaryDirectory() as d:
@@ -79,7 +81,7 @@ class FindApiKeyTests(unittest.TestCase):
             hermes.mkdir()
             (hermes / ".env").write_text("OPENROUTER_API_KEY=hermes\n", encoding="utf-8")
             with clean_env(HOME=d):
-                self.assertEqual(find_api_key()[0], "own")
+                self.assertEqual(find_api_key().key, "own")
 
     def test_falls_back_to_hermes_env(self):
         with tempfile.TemporaryDirectory() as d:
@@ -87,9 +89,10 @@ class FindApiKeyTests(unittest.TestCase):
             hermes.mkdir()
             (hermes / ".env").write_text('OPENROUTER_API_KEY="hermes-key"\n', encoding="utf-8")
             with clean_env(HOME=d):
-                key, where = find_api_key()
-                self.assertEqual(key, "hermes-key")
-                self.assertIn(".hermes", where)
+                found = find_api_key()
+                self.assertEqual(found.key, "hermes-key")
+                self.assertIn(".hermes", found.origin)
+                self.assertEqual(found.var, "OPENROUTER_API_KEY")
 
     def test_hermes_home_override(self):
         with tempfile.TemporaryDirectory() as d:
@@ -97,12 +100,12 @@ class FindApiKeyTests(unittest.TestCase):
             profile.mkdir()
             (profile / ".env").write_text("OPENAI_API_KEY=profiled\n", encoding="utf-8")
             with clean_env(HOME=d, HERMES_HOME=str(profile)):
-                self.assertEqual(find_api_key()[0], "profiled")
+                self.assertEqual(find_api_key().key, "profiled")
 
     def test_nothing_found(self):
         with tempfile.TemporaryDirectory() as d:
             with clean_env(HOME=d):
-                self.assertEqual(find_api_key(), (None, "nowhere"))
+                self.assertEqual(find_api_key(), (None, "nowhere", None))
 
     def test_env_file_override_path(self):
         with tempfile.TemporaryDirectory() as d:
@@ -110,7 +113,7 @@ class FindApiKeyTests(unittest.TestCase):
             custom.write_text("ABSTRACT_WRITER_API_KEY=custom\n", encoding="utf-8")
             with clean_env(HOME=d, ABSTRACT_WRITER_ENV_FILE=str(custom)):
                 self.assertEqual(own_env_file(), custom)
-                self.assertEqual(find_api_key()[0], "custom")
+                self.assertEqual(find_api_key().key, "custom")
 
     def test_hermes_default_location(self):
         with tempfile.TemporaryDirectory() as d:

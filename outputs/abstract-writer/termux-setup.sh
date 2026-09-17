@@ -51,10 +51,14 @@ if [ -f "$ENV_FILE" ]; then
     echo "ok: $ENV_FILE already exists (left untouched)"
 else
     cat > "$ENV_FILE" <<'ENVEOF'
-# Paste your key after the = and save. Any chat-completions endpoint works.
-export ABSTRACT_WRITER_API_KEY=
-export ABSTRACT_WRITER_BASE_URL=https://openrouter.ai/api/v1
-export ABSTRACT_WRITER_MODEL=anthropic/claude-sonnet-4.5
+# Paste your key after the = and save. That is all that is needed: the
+# endpoint and model are worked out from the key. An OpenRouter key (sk-or-...)
+# and an OpenAI key (sk-...) both just work.
+ABSTRACT_WRITER_API_KEY=
+
+# Only uncomment these to override what was worked out for you.
+# ABSTRACT_WRITER_BASE_URL=https://openrouter.ai/api/v1
+# ABSTRACT_WRITER_MODEL=anthropic/claude-sonnet-4.5
 ENVEOF
     chmod 600 "$ENV_FILE"
     echo "created $ENV_FILE — open it and paste your key:"

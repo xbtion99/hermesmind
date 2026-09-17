@@ -18,3 +18,4 @@
 | 2026-09-17 | outputs/abstract-writer/termux-setup.sh | command_not_found_handle 훅 추가 | 임시 HOME에서 5개 경우 실측 [샌드박스 검증됨], 실제 Termux 미검증 [Android 필요] |
 | 2026-09-17 | outputs/abstract-writer/abstract_writer/shellrc.py | .bashrc 관리 구간 설치·갱신 | 예전 블록 업그레이드·멱등성·백업 실측, unittest 92 OK [샌드박스 검증됨] |
 | 2026-09-17 | outputs/abstract-writer/abstract_writer/keys.py | API 키 탐색(환경변수 → 자체 .env → Hermes .env) | 우선순위·직접 읽기·오류 메시지 실측, unittest 107 OK [샌드박스 검증됨] |
+| 2026-09-17 | outputs/abstract-writer/abstract_writer/endpoints.py | 키 종류 → 엔드포인트·모델 결정 | 낡은 기본값 상황 포함 실측, unittest 125 OK [샌드박스 검증됨] |

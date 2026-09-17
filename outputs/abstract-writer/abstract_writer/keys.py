@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import NamedTuple
 
 ENV_VARS = ("ABSTRACT_WRITER_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY")
 
@@ -57,20 +58,26 @@ def read_dotenv(path: Path) -> dict[str, str]:
     return values
 
 
-def find_api_key() -> tuple[str | None, str]:
-    """Return (key, where_it_came_from). `key` is None when nothing was found."""
+class FoundKey(NamedTuple):
+    key: str | None
+    origin: str   # human-readable: "$VAR" or "/path (VAR)"
+    var: str | None   # which variable name held it, for endpoint inference
+
+
+def find_api_key() -> FoundKey:
+    """Where the key is, and which variable name held it."""
     for var in ENV_VARS:
         value = os.environ.get(var)
         if value:
-            return value, f"${var}"
+            return FoundKey(value, f"${var}", var)
     for path in (own_env_file(), hermes_env_file()):
         if not path.is_file():
             continue
         values = read_dotenv(path)
         for var in ENV_VARS:
             if values.get(var):
-                return values[var], f"{path} ({var})"
-    return None, "nowhere"
+                return FoundKey(values[var], f"{path} ({var})", var)
+    return FoundKey(None, "nowhere", None)
 
 
 def missing_key_message() -> str:

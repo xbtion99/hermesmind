@@ -27,6 +27,23 @@ export ABSTRACT_WRITER_BASE_URL=https://openrouter.ai/api/v1   # 기본값
 export ABSTRACT_WRITER_MODEL=anthropic/claude-sonnet-4.5       # 기본값. 원하는 모델로 바꾼다
 ```
 
+### 키만 넣으면 된다
+
+엔드포인트와 모델은 키를 보고 정한다. OpenRouter 키(`sk-or-...`)든 OpenAI 키(`sk-...`)든
+`ABSTRACT_WRITER_API_KEY=` 한 줄이면 된다.
+
+| 키 | 엔드포인트 | 기본 모델 |
+|---|---|---|
+| `sk-or-...` 또는 `OPENROUTER_API_KEY` | `https://openrouter.ai/api/v1` | `anthropic/claude-sonnet-4.5` |
+| `sk-...` 또는 `OPENAI_API_KEY` | `https://api.openai.com/v1` | `gpt-4o` |
+| 그 밖 | OpenRouter | `anthropic/claude-sonnet-4.5` |
+
+직접 정한 값이 항상 이긴다. 다만 기본값과 같은 값은 "정한 것"으로 치지 않는다.
+예전 버전이 만들어 둔 키 파일에 OpenRouter 기본값이 그대로 적혀 있어도, OpenAI 키를 넣으면
+OpenAI로 간다. 로컬 서버나 다른 제공자를 쓰려면 `ABSTRACT_WRITER_BASE_URL`을 바꾼다.
+
+401이나 404가 나면 오류 메시지가 지금 쓰고 있는 `base_url`과 `model`, 그리고 무엇을 바꿔야 하는지 알려준다.
+
 ### 키를 찾는 순서
 
 환경변수를 내보내지 않아도 된다. 아래 순서로 찾고, 파일은 실행할 때마다 직접 읽는다.
@@ -277,6 +294,7 @@ abstract-writer/
     pipeline.py             # 단계 연결, JSON 관대 파싱, 수락 조건
     prompts.py              # 단계별 시스템 프롬프트 (ko/en)
     lint.py                 # 결정론적 검사
+    endpoints.py            # 키를 보고 엔드포인트·모델 정하기
     keys.py                 # 환경변수와 .env 파일에서 API 키 찾기
     phrase.py               # "기다림 함축 짧게" → 주제 + 옵션
     shellrc.py              # ~/.bashrc의 관리 구간 설치·갱신

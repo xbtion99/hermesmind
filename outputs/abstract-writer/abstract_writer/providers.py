@@ -16,11 +16,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Protocol
 
+from .endpoints import DEFAULT_BASE_URL, DEFAULT_MODEL, resolve
 from .keys import find_api_key, missing_key_message
-
-DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_MODEL = "anthropic/claude-sonnet-4.5"
-
 
 class ProviderError(RuntimeError):
     pass
@@ -76,13 +73,30 @@ class OpenAICompatible:
                 return _extract_content(payload)
             except urllib.error.HTTPError as exc:
                 detail = exc.read().decode("utf-8", errors="replace")[:500]
-                last = ProviderError(f"HTTP {exc.code} from {url}: {detail}")
+                last = ProviderError(self._http_error(exc.code, url, detail))
                 if exc.code in (400, 401, 403, 404):
                     raise last from exc
             except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
                 last = ProviderError(f"request failed: {exc}")
             time.sleep(2 ** attempt)
         raise last or ProviderError("unknown provider failure")
+
+    def _http_error(self, code: int, url: str, detail: str) -> str:
+        head = f"HTTP {code} from {url}: {detail}"
+        hint = ""
+        if code in (401, 403):
+            hint = (
+                f"\n  키와 엔드포인트가 짝이 맞지 않는 것 같다. 지금 쓰는 값:"
+                f"\n    base_url = {self.base_url}"
+                f"\n    model    = {self.model}"
+                f"\n  다른 곳에 보내려면 ABSTRACT_WRITER_BASE_URL을 바꾼다."
+            )
+        elif code in (400, 404) and "model" in detail.lower():
+            hint = (
+                f"\n  이 엔드포인트가 모르는 모델일 수 있다. 지금 model = {self.model}"
+                f"\n  ABSTRACT_WRITER_MODEL 또는 --model 로 바꾼다."
+            )
+        return head + hint
 
 
 def _extract_content(payload: dict) -> str:
@@ -250,9 +264,11 @@ def make_provider(name: str = "openai", *, model: str | None = None, base_url: s
     if name == "mock":
         return MockProvider()
     if name in ("openai", "openrouter", "compatible"):
-        return OpenAICompatible(
-            model=model or os.environ.get("ABSTRACT_WRITER_MODEL", DEFAULT_MODEL),
-            base_url=base_url or os.environ.get("ABSTRACT_WRITER_BASE_URL", DEFAULT_BASE_URL),
-            api_key=api_key or find_api_key()[0],
-        )
+        found = find_api_key()
+        key = api_key or found.key
+        var = None if api_key else found.var
+        wanted_base = base_url or os.environ.get("ABSTRACT_WRITER_BASE_URL", DEFAULT_BASE_URL)
+        wanted_model = model or os.environ.get("ABSTRACT_WRITER_MODEL", DEFAULT_MODEL)
+        final_base, final_model = resolve(wanted_base, wanted_model, key, var)
+        return OpenAICompatible(model=final_model, base_url=final_base, api_key=key)
     raise ProviderError(f"unknown provider: {name}")
