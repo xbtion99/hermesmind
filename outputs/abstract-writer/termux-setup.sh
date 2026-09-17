@@ -72,17 +72,48 @@ else
 # abstract-writer
 [ -f "$ENV_FILE" ] && . "$ENV_FILE"
 aw() { PYTHONPATH="$HERE" "$PY" -m abstract_writer "\$@"; }
+
+# Type a Korean word on its own and it is written about. Anything that is
+# plain ASCII falls through to the shell's usual "command not found", so a
+# mistyped command still behaves normally.
+command_not_found_handle() {
+    case "\$*" in
+        *[!\ -~]*)
+            PYTHONPATH="$HERE" "$PY" -m abstract_writer --shell-phrase "\$*"
+            _aw_rc=\$?
+            if [ "\$_aw_rc" -ne 127 ]; then
+                return "\$_aw_rc"
+            fi
+            ;;
+    esac
+    if [ -x /data/data/com.termux/files/usr/libexec/termux/command-not-found ]; then
+        /data/data/com.termux/files/usr/libexec/termux/command-not-found "\$1"
+    else
+        echo "bash: \$1: command not found" >&2
+    fi
+    return 127
+}
 RCEOF
-    echo "added the 'aw' command to $RC"
+    echo "added the 'aw' command and the bare-word hook to $RC"
 fi
 
 say "Done"
 cat <<'DONEEOF'
-Open a new Termux session (or run: source ~/.bashrc), then:
+Open a new Termux session (or run: source ~/.bashrc), then just type a word:
 
-    aw "기다림"                          write a piece
+    기다림                               write a piece about it
+    기다림 함축                          the implicit version
+    첫눈 단상 짧게                       fragments, short
+
+Modifiers, all optional, in any order after the topic:
+    함축 / 압축, 설명 · 단상, 편지, 에세이 · 짧게, 길게
+
+The full command form still works when you need flags:
+
     aw "기다림" --out ~/piece.md         save it to a file
     aw --lint ~/piece.md                 check a draft (no key, no network)
+
+Mistyped ASCII commands are untouched: `gti status` still says command not found.
 
 To save straight into your phone's shared storage so other apps can open it,
 run `termux-setup-storage` once, then use --out ~/storage/shared/Documents/piece.md

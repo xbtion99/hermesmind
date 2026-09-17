@@ -33,3 +33,12 @@
 - blocker: 실제 모델이 함축 지시를 얼마나 지키는지 미측정 (API 키 필요)
 - 다음 한 가지 행동: 실제 모델로 plain과 compressed를 같은 주제로 한 편씩 생성해 차이를 evaluations/에 기록 (API 키 필요)
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 한글 단어만 입력
+- 목표: 폰에서 명령어·따옴표·플래그 없이 한글 주제만 쳐도 글이 나오게 한다
+- 변경 파일: abstract_writer/phrase.py(신규), abstract_writer/cli.py(--phrase, --shell-phrase, ABSTRACT_WRITER_PROVIDER), termux-setup.sh(command_not_found_handle), README.md, tests/test_phrase.py(신규), tests/test_cli.py
+- 검증 결과: 임시 HOME에 훅 설치 후 5개 경우 실측 — 한글 단어만/한글+수식어는 실행, 영문 오타(gti)와 비ASCII 오타(café)는 평소대로 command not found, 정상 명령 영향 없음 · unittest 79 OK(60→79) · ruff 통과 [샌드박스 검증됨]
+- 결정: bash 글로브의 한글 범위는 café도 잡으므로, 셸은 비ASCII만 거르고 한글 판별은 Python이 한다. 한글이 없으면 무출력 127로 끝내 셸이 원래 메시지를 찍게 한다
+- 버그 1건: 같은 갈래 수식어가 겹칠 때 주석은 leftmost라고 했으나 실제는 마지막에 친 것이 이김. 테스트가 잡았고, 자기 정정으로 읽는 편이 자연스러워 동작을 유지하고 주석·테스트를 고침
+- blocker: 실제 Termux 기기에서 훅 미검증
+- 다음 한 가지 행동: 폰에서 setup을 다시 돌리고 `기다림`만 쳐서 확인 (Android 기기 필요)
+

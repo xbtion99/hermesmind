@@ -78,6 +78,59 @@ class CliTests(unittest.TestCase):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             main(["기다림", "--register", "함축"])
 
+    def test_phrase_applies_modifiers(self):
+        outs = {}
+        for phrase in ("기다림", "기다림 함축"):
+            buf = io.StringIO()
+            with redirect_stdout(buf), redirect_stderr(io.StringIO()):
+                rc = main(["--phrase", phrase, "--provider", "mock", "-q"])
+            self.assertEqual(rc, 0, phrase)
+            outs[phrase] = buf.getvalue()
+        self.assertLess(len(outs["기다림 함축"]), len(outs["기다림"]))
+
+    def test_phrase_modifier_reaches_the_trace(self):
+        with tempfile.TemporaryDirectory() as d:
+            trace = Path(d) / "t.json"
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                main(["--phrase", "첫눈 단상 짧게", "--provider", "mock", "-q",
+                      "--trace", str(trace)])
+            opts = json.loads(trace.read_text(encoding="utf-8"))["options"]
+            self.assertEqual(opts["form"], "fragments")
+            self.assertEqual(opts["length"], "short")
+            self.assertEqual(json.loads(trace.read_text(encoding="utf-8"))["seed"], "첫눈")
+
+    def test_shell_phrase_exits_127_silently_without_hangul(self):
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            rc = main(["--shell-phrase", "gti status", "--provider", "mock"])
+        self.assertEqual(rc, 127)
+        self.assertEqual(out.getvalue(), "")
+        self.assertEqual(err.getvalue(), "")
+
+    def test_shell_phrase_writes_when_korean(self):
+        out = io.StringIO()
+        with redirect_stdout(out), redirect_stderr(io.StringIO()):
+            rc = main(["--shell-phrase", "기다림 함축", "--provider", "mock", "-q"])
+        self.assertEqual(rc, 0)
+        self.assertIn("# 두 종류의 기다림", out.getvalue())
+
+    def test_empty_phrase_is_usage_error(self):
+        with redirect_stderr(io.StringIO()):
+            self.assertEqual(main(["--phrase", "   ", "--provider", "mock"]), 2)
+
+    def test_provider_env_var_is_the_default(self):
+        import os
+        old = os.environ.get("ABSTRACT_WRITER_PROVIDER")
+        os.environ["ABSTRACT_WRITER_PROVIDER"] = "mock"
+        try:
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                self.assertEqual(main(["기다림", "-q"]), 0)
+        finally:
+            if old is None:
+                os.environ.pop("ABSTRACT_WRITER_PROVIDER", None)
+            else:
+                os.environ["ABSTRACT_WRITER_PROVIDER"] = old
+
     def test_missing_seed_is_usage_error(self):
         with redirect_stderr(io.StringIO()):
             self.assertEqual(main([]), 2)

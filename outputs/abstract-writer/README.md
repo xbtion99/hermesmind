@@ -82,6 +82,34 @@ aw "기다림" --provider mock
 aw "기다림" --provider mock --register compressed
 ```
 
+### 한글 단어만 치기
+
+설정 스크립트는 `aw` 명령과 함께 셸 훅(`command_not_found_handle`)을 넣는다.
+명령어도 따옴표도 없이 주제만 치면 된다.
+
+```
+$ 기다림
+$ 기다림 함축
+$ 첫눈 단상 짧게
+```
+
+주제 뒤에 붙이는 수식어는 전부 선택이고 순서는 상관없다.
+
+| 갈래 | 단어 |
+|---|---|
+| 레지스터 | `함축`, `압축` / `설명` |
+| 형식 | `단상`, `편지`, `에세이` |
+| 길이 | `짧게`, `길게`, `보통` |
+
+같은 갈래를 두 번 쓰면 나중에 친 것이 이긴다. `기다림 짧게 길게`는 길게다.
+수식어는 뒤에서부터 읽다가 수식어가 아닌 단어를 만나면 멈춘다. 그래서 `기다림에 대하여 편지`는
+주제가 "기다림에 대하여"이고, `편지`만 치면 주제가 "편지"다.
+
+훅은 비ASCII 입력에만 반응한다. `gti status` 같은 영문 오타는 평소대로 `command not found`가 뜬다.
+
+이 방식에는 플래그를 붙일 수 없다. `--out`이나 `--trace`가 필요하면 `aw` 형태를 쓴다.
+키 없이 연습만 해보려면 `export ABSTRACT_WRITER_PROVIDER=mock`을 걸어 두면 된다.
+
 이제 폰에서 이렇게 쓴다.
 
 ```bash
@@ -137,7 +165,8 @@ python3 -m abstract_writer --lint my_essay.md --json
 | `--threshold` | 실수 | 감사 점수가 이 값 이상이고 verdict가 pass이면 조기 종료 (기본 7.5) |
 | `--no-audit` | | 모델 감사·수정 건너뛰기 (작성 1회만) |
 | `--no-lint-gate` | | 린트 지적이 있어도 통과 허용 |
-| `--provider` | `openai`, `mock` | `openai`는 모든 chat-completions 호환 엔드포인트 |
+| `--provider` | `openai`, `mock` | `openai`는 모든 chat-completions 호환 엔드포인트. 기본값은 `$ABSTRACT_WRITER_PROVIDER` |
+| `--phrase` | 한 줄 | `"기다림 함축 짧게"`처럼 주제와 수식어를 한 번에. 아래 "한글 단어만 치기" 참고 |
 | `--trace` | 경로 | 개념 지도, 각 회차의 글·린트·감사 결과를 JSON으로 저장 |
 
 ## 함축 (`--register compressed`)
@@ -232,6 +261,7 @@ abstract-writer/
     pipeline.py             # 단계 연결, JSON 관대 파싱, 수락 조건
     prompts.py              # 단계별 시스템 프롬프트 (ko/en)
     lint.py                 # 결정론적 검사
+    phrase.py               # "기다림 함축 짧게" → 주제 + 옵션
     providers.py            # OpenAI 호환 클라이언트, Mock
   tests/
   examples/

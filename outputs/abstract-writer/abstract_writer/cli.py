@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 from . import __version__
 from .lint import detect_lang, lint_text
+from .phrase import has_hangul, parse_phrase
 from .pipeline import Options, ProviderError, StageError, write
 from .providers import make_provider
 from . import prompts
@@ -27,6 +29,12 @@ def build_parser() -> argparse.ArgumentParser:
         description="Write abstract prose that earns its abstraction (see METHOD.md).",
     )
     p.add_argument("seed", nargs="?", help="topic, phrase, or question to write from")
+    p.add_argument("--phrase", metavar="TEXT", default=None,
+                   help="주제 뒤에 수식어를 붙인 한 줄. 예: \"기다림 함축 짧게\". "
+                        "수식어: 함축/압축, 설명, 단상, 편지, 에세이, 짧게, 길게")
+    p.add_argument("--shell-phrase", metavar="TEXT", default=None,
+                   help="--phrase와 같지만 한글이 없으면 아무 출력 없이 127로 끝난다. "
+                        "셸의 command_not_found_handle이 쓴다")
     p.add_argument("--lang", choices=list(prompts.LANG_NAMES), default=None,
                    help="output language (default: detected from the seed)")
     p.add_argument("--form", choices=list(prompts.FORMS), default="essay")
@@ -38,7 +46,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--temperature", type=float, default=0.8)
     p.add_argument("--no-audit", action="store_true", help="skip the model audit/revise loop")
     p.add_argument("--no-lint-gate", action="store_true", help="do not require lint to pass")
-    p.add_argument("--provider", default="openai", help="openai (any /chat/completions endpoint) or mock")
+    p.add_argument("--provider", default=os.environ.get("ABSTRACT_WRITER_PROVIDER", "openai"),
+                   help="openai (any /chat/completions endpoint) or mock. "
+                        "기본값은 $ABSTRACT_WRITER_PROVIDER, 없으면 openai")
     p.add_argument("--model", default=None, help="model id (default: $ABSTRACT_WRITER_MODEL)")
     p.add_argument("--base-url", default=None, help="API base URL (default: $ABSTRACT_WRITER_BASE_URL)")
     p.add_argument("--out", type=Path, default=None, help="write the piece to this file")
@@ -77,6 +87,19 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.summary())
         return 0 if report.passed else 1
 
+    phrase = args.phrase or args.shell_phrase
+    overrides: dict[str, str] = {}
+    if phrase is not None:
+        if args.shell_phrase is not None and not has_hangul(phrase):
+            # Not Korean, so this was an ordinary mistyped command. Say nothing
+            # and let the shell print its own "command not found".
+            return 127
+        try:
+            args.seed, overrides = parse_phrase(phrase)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+
     if not args.seed:
         build_parser().print_usage(sys.stderr)
         print("error: a seed is required unless --lint is given", file=sys.stderr)
@@ -88,6 +111,9 @@ def main(argv: list[str] | None = None) -> int:
         threshold=args.threshold, temperature=args.temperature,
         require_lint_pass=not args.no_lint_gate,
     )
+    # Words in the phrase override the flag defaults.
+    for field, value in overrides.items():
+        setattr(opts, field, value)
     try:
         provider = make_provider(args.provider, model=args.model, base_url=args.base_url)
         result = write(args.seed, provider, opts, audit=not args.no_audit,
