@@ -16,3 +16,4 @@
 | 2026-09-17 | outputs/abstract-writer/abstract_writer/{prompts,lint,pipeline,cli,providers}.py | --register plain/compressed 추가, scaffold_density 검사 | unittest 60 OK, ruff 통과 [샌드박스 검증됨] |
 | 2026-09-17 | outputs/abstract-writer/abstract_writer/phrase.py | "기다림 함축 짧게" → 주제 + 옵션 파서 | unittest 79 OK [샌드박스 검증됨] |
 | 2026-09-17 | outputs/abstract-writer/termux-setup.sh | command_not_found_handle 훅 추가 | 임시 HOME에서 5개 경우 실측 [샌드박스 검증됨], 실제 Termux 미검증 [Android 필요] |
+| 2026-09-17 | outputs/abstract-writer/abstract_writer/shellrc.py | .bashrc 관리 구간 설치·갱신 | 예전 블록 업그레이드·멱등성·백업 실측, unittest 92 OK [샌드박스 검증됨] |

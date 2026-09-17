@@ -42,3 +42,12 @@
 - blocker: 실제 Termux 기기에서 훅 미검증
 - 다음 한 가지 행동: 폰에서 setup을 다시 돌리고 `기다림`만 쳐서 확인 (Android 기기 필요)
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 훅 설치 실패 수정
+- 목표: 폰에서 `저녁`을 쳤는데 command not found가 난 원인 규명과 수정
+- 원인: termux-setup.sh의 멱등성 검사가 .bashrc에 "abstract-writer.env" 문자열이 있으면 "이미 설정됨"으로 건너뛰었다. 그 문자열은 이전 버전이 이미 넣어 둔 것이라, 새로 추가된 command_not_found_handle이 영영 설치되지 않았다
+- 변경 파일: abstract_writer/shellrc.py(신규), termux-setup.sh(설치를 shellrc에 위임 + 설치 검증 단계 추가), README.md, tests/test_shellrc.py(신규)
+- 검증 결과: 사용자와 같은 모양의 예전 .bashrc로 재현 후 업그레이드 확인 — 예전 블록 제거, 사용자 줄 보존, 백업 생성, 2회차 unchanged · 한글 단어/수식어/따옴표 입력 모두 실행, 영문 오타는 command not found 유지 · unittest 92 OK(79→92) · ruff 통과 [샌드박스 검증됨]
+- 결정: .bashrc 편집을 "없으면 추가"에서 마커 구간 교체로 바꾼다. 셸 스크립트의 문자열 검사 대신 Python 모듈로 옮겨 단위 테스트를 붙였다
+- blocker: 없음
+- 다음 한 가지 행동: 폰에서 setup 재실행 후 `저녁` 입력 확인 (Android 기기 필요)
+

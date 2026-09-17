@@ -60,9 +60,13 @@ cd ~/hermesmind && git fetch --depth 1 origin claude/abstract-deep-writing-progr
 
 `main`에 머지된 뒤에는 `-b` 없이 평범하게 clone 하면 된다.
 
-`termux-setup.sh`가 하는 일은 네 가지다. Python 3.10 이상인지 확인하고, 키 없이 파이프라인이
-도는지 오프라인으로 한 번 돌려보고, `~/.abstract-writer.env`를 만들고, `~/.bashrc`에 `aw` 명령을 추가한다.
-키는 스크립트가 쓰지 않는다. 직접 넣어야 한다.
+`termux-setup.sh`가 하는 일은 다섯 가지다. Python 3.10 이상인지 확인하고, 키 없이 파이프라인이
+도는지 오프라인으로 한 번 돌려보고, `~/.abstract-writer.env`를 만들고, `~/.bashrc`에 `aw` 명령과
+한글 단어 훅을 넣고, 훅이 실제로 걸렸는지 확인한다. 키는 스크립트가 쓰지 않는다. 직접 넣어야 한다.
+
+`~/.bashrc`에 넣는 부분은 `# >>> abstract-writer >>>`와 `# <<< abstract-writer <<<` 사이에 둔다.
+다시 실행하면 그 구간만 통째로 갈아 끼우므로 중복되지 않고, 갱신도 된다. 바꾸기 전에
+`~/.bashrc.abstract-writer.bak`으로 백업한다. 마커 밖에 직접 쓴 설정은 건드리지 않는다.
 
 ```bash
 nano ~/.abstract-writer.env    # ABSTRACT_WRITER_API_KEY= 뒤에 키를 붙여넣는다
@@ -127,7 +131,7 @@ aw --lint piece.md             # 초고 검사. 키도 네트워크도 필요 �
 주의할 점 몇 가지.
 
 - `aw` 명령은 설정 당시의 폴더 경로를 기억한다. 폴더를 옮기면 `termux-setup.sh`를 다시 실행한다.
-- 스크립트를 다시 실행해도 안전하다. 이미 있는 키 파일과 `.bashrc` 설정은 건드리지 않는다.
+- 스크립트를 다시 실행해도 안전하다. 키 파일은 그대로 두고, `.bashrc`의 마커 구간만 최신 내용으로 바꾼다.
 - `git clone` 대신 `abstract_writer/` 폴더만 복사해도 돌아간다. 그 경우 폴더가 있는 곳에서
   `python -m abstract_writer "기다림"` 으로 실행한다.
 
@@ -262,6 +266,7 @@ abstract-writer/
     prompts.py              # 단계별 시스템 프롬프트 (ko/en)
     lint.py                 # 결정론적 검사
     phrase.py               # "기다림 함축 짧게" → 주제 + 옵션
+    shellrc.py              # ~/.bashrc의 관리 구간 설치·갱신
     providers.py            # OpenAI 호환 클라이언트, Mock
   tests/
   examples/

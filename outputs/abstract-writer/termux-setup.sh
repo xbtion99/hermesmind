@@ -64,37 +64,17 @@ fi
 # ── 4. Shell wiring ─────────────────────────────────────────────────────────
 say "Shell setup"
 touch "$RC"
-if grep -q "abstract-writer.env" "$RC" 2>/dev/null; then
-    echo "ok: $RC already wired (left untouched)"
+PYTHONPATH="$HERE" "$PY" -m abstract_writer.shellrc \
+    --rc "$RC" --here "$HERE" --python "$PY" --env-file "$ENV_FILE"
+
+# ── 5. Prove the hook is really in place ────────────────────────────────────
+say "Hook check"
+if bash -c ". '$RC' >/dev/null 2>&1; declare -F command_not_found_handle >/dev/null" 2>/dev/null; then
+    echo "ok: typing a Korean word on its own will work in a new session"
 else
-    cat >> "$RC" <<RCEOF
-
-# abstract-writer
-[ -f "$ENV_FILE" ] && . "$ENV_FILE"
-aw() { PYTHONPATH="$HERE" "$PY" -m abstract_writer "\$@"; }
-
-# Type a Korean word on its own and it is written about. Anything that is
-# plain ASCII falls through to the shell's usual "command not found", so a
-# mistyped command still behaves normally.
-command_not_found_handle() {
-    case "\$*" in
-        *[!\ -~]*)
-            PYTHONPATH="$HERE" "$PY" -m abstract_writer --shell-phrase "\$*"
-            _aw_rc=\$?
-            if [ "\$_aw_rc" -ne 127 ]; then
-                return "\$_aw_rc"
-            fi
-            ;;
-    esac
-    if [ -x /data/data/com.termux/files/usr/libexec/termux/command-not-found ]; then
-        /data/data/com.termux/files/usr/libexec/termux/command-not-found "\$1"
-    else
-        echo "bash: \$1: command not found" >&2
-    fi
-    return 127
-}
-RCEOF
-    echo "added the 'aw' command and the bare-word hook to $RC"
+    echo "WARNING: the hook is not active after sourcing $RC." >&2
+    echo "         Something later in that file may be redefining it." >&2
+    echo "         The 'aw' command still works." >&2
 fi
 
 say "Done"
