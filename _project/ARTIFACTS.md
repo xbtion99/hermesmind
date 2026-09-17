@@ -22,3 +22,4 @@
 | 2026-09-17 | outputs/abstract-writer (--prompt 모드) | 키 없이 붙여넣기용 프롬프트 출력 | 키·HOME 없는 환경에서 실측, unittest 132 OK [샌드박스 검증됨] |
 | 2026-09-17 | outputs/abstract-writer/examples/burgerking_ko.md | --prompt 프롬프트로 받은 첫 실제 산출물 (단상, 1231자) | --lint 지적 0건 [샌드박스 검증됨] |
 | 2026-09-17 | evaluations/2026-09-17_first-model-output.md | 프롬프트가 실제 모델에서 작동하는지 첫 평가 | 형식·길이·린트 실측 |
+| 2026-09-17 | outputs/abstract-writer (길이·단락 검사) | 브리프 대비 길이·단락 수 검사 + 프롬프트/린트 수치 불변식 | unittest 156 OK [샌드박스 검증됨] |

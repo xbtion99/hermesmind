@@ -10,10 +10,20 @@ import json
 
 LANG_NAMES = {"ko": "Korean", "en": "English"}
 
+# How big the piece should be. One table, so the text of the brief and the
+# check that reads it back cannot drift apart. Korean counts characters and
+# English words, each the unit that language's brief states.
+LENGTH_RANGES = {
+    "ko": {"short": (600, 900), "medium": (1200, 1800), "long": (2500, 3500)},
+    "en": {"short": (200, 300), "medium": (400, 600), "long": (850, 1200)},
+}
+# Paragraphs, or numbered fragments, that each form asks for.
+FORM_UNITS = {"essay": (4, 8), "fragments": (8, 14), "letter": (4, 7)}
+
 FORMS = {
     "essay": {
-        "ko": "에세이. 5~8개 단락. 제목 한 줄을 첫 줄에 `# 제목` 형식으로 붙인다.",
-        "en": "An essay of 5–8 paragraphs. Put a one-line title on the first line as `# Title`.",
+        "ko": "에세이. 4~8개 단락. 제목 한 줄을 첫 줄에 `# 제목` 형식으로 붙인다.",
+        "en": "An essay of 4–8 paragraphs. Put a one-line title on the first line as `# Title`.",
     },
     "fragments": {
         "ko": "단상(斷想). 번호가 붙은 8~14개의 짧은 조각. 각 조각은 1~3문장. 조각 사이는 빈 줄. 조각들은 순서대로 읽으면 하나의 사유가 진행되어야 한다.",
@@ -26,9 +36,9 @@ FORMS = {
 }
 
 LENGTHS = {
-    "short": {"ko": "600~900자", "en": "350–500 words"},
-    "medium": {"ko": "1200~1800자", "en": "700–1000 words"},
-    "long": {"ko": "2500~3500자", "en": "1500–2000 words"},
+    "short": {"ko": "600~900자", "en": "200–300 words"},
+    "medium": {"ko": "1200~1800자", "en": "400–600 words"},
+    "long": {"ko": "2500~3500자", "en": "850–1200 words"},
 }
 
 REGISTERS = {

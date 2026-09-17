@@ -38,8 +38,11 @@ def build_parser() -> argparse.ArgumentParser:
                         "셸의 command_not_found_handle이 쓴다")
     p.add_argument("--lang", choices=list(prompts.LANG_NAMES), default=None,
                    help="output language (default: detected from the seed)")
-    p.add_argument("--form", choices=list(prompts.FORMS), default="essay")
-    p.add_argument("--length", choices=list(prompts.LENGTHS), default="medium")
+    # Default None so `--lint file.md` checks nothing about size unless asked.
+    p.add_argument("--form", choices=list(prompts.FORMS), default=None,
+                   help="기본값 essay. --lint 과 함께 주면 단락 수도 검사한다")
+    p.add_argument("--length", choices=list(prompts.LENGTHS), default=None,
+                   help="기본값 medium. --lint 과 함께 주면 길이도 검사한다")
     p.add_argument("--register", choices=list(prompts.REGISTERS), default="plain",
                    help="plain은 설명을 허용하고, compressed(함축)는 접속사와 자기 해설을 금지한다")
     p.add_argument("--rounds", type=int, default=2, help="max revise rounds (default 2)")
@@ -86,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.lint is not None:
         text = args.lint.read_text(encoding="utf-8")
-        report = lint_text(text, args.lang, args.register)
+        report = lint_text(text, args.lang, args.register, args.length, args.form)
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.summary())
         return 0 if report.passed else 1
 
@@ -123,7 +126,8 @@ def main(argv: list[str] | None = None) -> int:
 
     lang = args.lang or detect_lang(args.seed)
     opts = Options(
-        lang=lang, form=args.form, length=args.length, register=args.register, rounds=args.rounds,
+        lang=lang, form=args.form or "essay", length=args.length or "medium",
+        register=args.register, rounds=args.rounds,
         threshold=args.threshold, temperature=args.temperature,
         require_lint_pass=not args.no_lint_gate,
     )

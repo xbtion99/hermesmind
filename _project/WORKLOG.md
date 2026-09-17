@@ -104,3 +104,14 @@
 - blocker: 자동 파이프라인(감사·수정 회차)은 여전히 미검증. API 키 필요
 - 다음 한 가지 행동: 린트에 길이·조각 수 검사를 넣는다 (키 불필요)
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 린트에 길이·단락 수 검사
+- 목표: 어제 평가가 지목한 단 하나의 다음 작업. 린트가 길이 위반(1026자 vs 1200~1800)을 그냥 통과시킨 결함을 없앤다
+- 변경 파일: abstract_writer/prompts.py(LENGTH_RANGES·FORM_UNITS 신설, 영어 길이 재보정, essay 4~8로), abstract_writer/lint.py(measure_size·length_target·검사), abstract_writer/pipeline.py, abstract_writer/cli.py(--form/--length 기본값 None), METHOD.md, README.md, tests/*
+- 작업 중 드러난 진짜 문제 2건:
+  1) 영어 길이 기준이 한국어보다 두 배 가까이 컸다(short: 350~500단어 vs 600~900자 ≈ 200~300단어). 영어를 200~300/400~600/850~1200으로 재보정
+  2) essay 형식이 5~8단락을 요구했으나 참조 예시가 4단락이었다. 형식과 예시가 어긋나 있었다. 4~8로 조정
+- 결정: 길이·단락 수치를 prompts.py 한 곳에 두고 프롬프트 문구와 린트가 모두 거기서 나오게 한다. 두 수치가 어긋나면 깨지는 불변식 테스트 3개 추가
+- 검증 결과: 첫 산출물(버거킹 1230자/14조각)이 브리프와 함께 검사해도 지적 0건 · 1026자 버전은 "shorter than asked"로 잡힘 · mock 4종이 short/essay에서 전부 통과 · --lint만 주면 길이는 안 봄 · unittest 156 OK(141→156) · ruff 통과 [샌드박스 검증됨]
+- blocker: 자동 파이프라인(감사·수정 회차) 여전히 미검증. API 키 필요
+- 다음 한 가지 행동: API 키가 생기면 파이프라인을 끝까지 돌려 감사 점수 추이를 evaluations/에 기록 (API 키 필요)
+

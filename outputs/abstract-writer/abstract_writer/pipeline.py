@@ -172,7 +172,7 @@ def write(seed: str, provider: Provider, options: Options | None = None,
     emit("compose", piece)
 
     for idx in range(opts.rounds + 1):
-        lint = lint_text(piece, opts.lang, opts.register)
+        lint = lint_text(piece, opts.lang, opts.register, opts.length, opts.form)
         emit("lint", lint)
         audit_obj: dict | None = None
         if audit:

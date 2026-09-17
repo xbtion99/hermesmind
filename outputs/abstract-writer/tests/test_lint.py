@@ -124,6 +124,93 @@ class ParagraphTests(unittest.TestCase):
         json.dumps(r.to_dict(), ensure_ascii=False)
 
 
+class SizeCheckTests(unittest.TestCase):
+    """METHOD.md's brief and the check that reads it back must agree."""
+
+    def test_nothing_is_checked_unless_asked(self):
+        r = lint_text("짧다. 버스가 아니라 답장.", "ko")
+        self.assertIsNone(r.length_target)
+        self.assertIsNone(r.form_target)
+        self.assertTrue(r.passed, r.flags)
+
+    def test_too_short_is_flagged(self):
+        r = lint_text("짧다. 버스가 아니라 답장이다. 손에 든 전화.", "ko", "plain", "medium")
+        self.assertTrue(any("shorter than asked" in f for f in r.flags), r.flags)
+
+    def test_too_long_is_flagged(self):
+        text = "버스가 아니라 답장을 기다린다. 손에 든 전화. " * 60
+        r = lint_text(text, "ko", "plain", "short")
+        self.assertTrue(any("longer than asked" in f for f in r.flags), r.flags)
+
+    def test_tolerance_lets_a_near_miss_through(self):
+        from abstract_writer.lint import LENGTH_TOLERANCE
+        from abstract_writer.prompts import LENGTH_RANGES
+        lo = LENGTH_RANGES["ko"]["short"][0]
+        just_under = int(lo * (1 - LENGTH_TOLERANCE / 2))
+        text = "문 앞에서 기다린다. 버스가 아니라 답장이다. " + "가" * just_under
+        r = lint_text(text, "ko", "plain", "short")
+        self.assertFalse(any("shorter" in f for f in r.flags), (r.measure, r.flags))
+
+    def test_compressed_target_is_smaller(self):
+        from abstract_writer.lint import length_target
+        plain = length_target("ko", "short", "plain")
+        compressed = length_target("ko", "short", "compressed")
+        self.assertLess(compressed[1], plain[1])
+        self.assertLess(compressed[0], plain[0])
+
+    def test_form_paragraph_count(self):
+        three = "가나다 버스가 아니라 답장.\n\n두 번째 문 앞.\n\n세 번째 손."
+        r = lint_text(three, "ko", "plain", None, "fragments")
+        self.assertEqual(r.form_target, (8, 14))
+        self.assertTrue(any("paragraphs" in f for f in r.flags), r.flags)
+
+    def test_korean_counts_characters_english_counts_words(self):
+        ko = lint_text("가나다라마 바사아자차", "ko")
+        en = lint_text("one two three four five", "en")
+        self.assertEqual(ko.measure_unit, "자")
+        self.assertEqual(en.measure_unit, "words")
+        self.assertEqual(en.measure, 5)
+
+    def test_headings_are_not_counted(self):
+        with_title = lint_text("# 아주 긴 제목이 여기에 있다\n\n본문이다.", "ko")
+        without = lint_text("본문이다.", "ko")
+        self.assertEqual(with_title.measure, without.measure)
+
+    def test_report_dict_carries_the_targets(self):
+        import json
+        r = lint_text("짧다.", "ko", "plain", "short", "essay")
+        d = r.to_dict()
+        json.dumps(d, ensure_ascii=False)
+        self.assertEqual(d["length_target"], [600, 900])
+        self.assertEqual(d["form_target"], [4, 8])
+
+
+class BriefAgreementTests(unittest.TestCase):
+    """The numbers a prompt states and the numbers the lint enforces are one table."""
+
+    def test_length_text_states_the_range(self):
+        from abstract_writer.prompts import LENGTHS, LENGTH_RANGES
+        for name, ranges in LENGTH_RANGES.items():
+            for length, (lo, hi) in ranges.items():
+                text = LENGTHS[length][name]
+                self.assertIn(str(lo), text, f"{name}/{length}: {text}")
+                self.assertIn(str(hi), text, f"{name}/{length}: {text}")
+
+    def test_form_text_states_the_unit_count(self):
+        from abstract_writer.prompts import FORMS, FORM_UNITS
+        for form, (lo, hi) in FORM_UNITS.items():
+            for lang in ("ko", "en"):
+                text = FORMS[form][lang]
+                self.assertIn(str(lo), text, f"{form}/{lang}: {text}")
+                self.assertIn(str(hi), text, f"{form}/{lang}: {text}")
+
+    def test_every_form_and_length_has_a_range(self):
+        from abstract_writer.prompts import FORMS, FORM_UNITS, LENGTHS, LENGTH_RANGES
+        self.assertEqual(set(FORMS), set(FORM_UNITS))
+        for lang in ("ko", "en"):
+            self.assertEqual(set(LENGTHS), set(LENGTH_RANGES[lang]))
+
+
 class RegisterTests(unittest.TestCase):
     """METHOD.md §10: scaffolding is recorded always, flagged only when compressed."""
 

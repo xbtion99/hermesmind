@@ -22,6 +22,7 @@ class CliTests(unittest.TestCase):
             piece, trace = Path(d) / "p.md", Path(d) / "t.json"
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
                 rc = main(["waiting", "--provider", "mock", "--lang", "en",
+                           "--length", "short",
                            "--out", str(piece), "--trace", str(trace), "-q"])
             self.assertEqual(rc, 0)
             self.assertTrue(piece.read_text(encoding="utf-8").startswith("# Two Kinds"))

@@ -12,6 +12,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from .prompts import FORM_UNITS, LENGTH_RANGES
+
 # ---------------------------------------------------------------------------
 # Vocabulary tables (mirror METHOD.md §7). Keep the two in sync.
 # ---------------------------------------------------------------------------
@@ -145,6 +147,10 @@ class LintReport:
     question_count: int = 0
     summary_ending: bool = False
     register: str = "plain"
+    measure: int = 0                     # characters (ko) or words (en)
+    measure_unit: str = "words"
+    length_target: tuple[int, int] | None = None
+    form_target: tuple[int, int] | None = None
     scaffold_count: int = 0
     scaffold_density: float = 0.0        # explanatory markers per 100 words
     flags: list[str] = field(default_factory=list)
@@ -168,6 +174,10 @@ class LintReport:
             "question_count": self.question_count,
             "summary_ending": self.summary_ending,
             "register": self.register,
+            "measure": self.measure,
+            "measure_unit": self.measure_unit,
+            "length_target": list(self.length_target) if self.length_target else None,
+            "form_target": list(self.form_target) if self.form_target else None,
             "scaffold_count": self.scaffold_count,
             "scaffold_density": round(self.scaffold_density, 3),
             "flags": list(self.flags),
@@ -184,6 +194,12 @@ class LintReport:
             f"register={self.register} scaffolding={self.scaffold_count} "
             f"({self.scaffold_density:.2f}/100w)",
         ]
+        if self.length_target:
+            lo, hi = self.length_target
+            lines.append(f"size={self.measure} {self.measure_unit} (asked for {lo}-{hi})")
+        if self.form_target:
+            lo, hi = self.form_target
+            lines.append(f"units={self.paragraphs} (asked for {lo}-{hi})")
         if self.flags:
             lines.append("FLAGS:")
             lines.extend(f"  - {f}" for f in self.flags)
@@ -198,6 +214,14 @@ MAX_HOLLOW_DENSITY = 1.0       # unspecified hollow terms per 100 words
 MIN_DISTINCTION_DENSITY = 0.4  # distinction markers per 100 words
 MIN_ANCHOR_RATIO = 0.5         # share of paragraphs with a concrete cue
 MAX_SCAFFOLD_DENSITY = 1.0     # explanatory markers per 100 words, compressed register only
+
+# What the prompts ask for, so a piece can be checked against its own brief.
+# Korean is counted in characters and English in words, the same units the
+# prompt states. Checked only when the caller says which length and form were
+# asked for; a bare `--lint file.md` still checks nothing about size.
+LENGTH_TOLERANCE = 0.10        # a piece just outside the range is not worth a round
+# The compressed register is told to finish inside 60% of the stated length.
+COMPRESSED_LO, COMPRESSED_HI = 0.4, 0.6
 
 
 def _count_markers(text: str, lang: str) -> int:
@@ -219,7 +243,27 @@ def _has_concrete_cue(paragraph: str, lang: str) -> bool:
     return any(re.search(rf"\b{re.escape(cue)}s?\b", low) for cue in CONCRETE_CUES["en"])
 
 
-def lint_text(text: str, lang: str | None = None, register: str = "plain") -> LintReport:
+def measure_size(text: str, lang: str) -> tuple[int, str]:
+    """Count the piece the way its prompt stated the target: 자 or words."""
+    body = "\n".join(line for line in text.splitlines() if not re.match(r"^#{1,6}\s", line))
+    body = body.strip()
+    if lang == "ko":
+        return len(body), "자"
+    return len(body.split()), "words"
+
+
+def length_target(lang: str, length: str, register: str) -> tuple[int, int] | None:
+    ranges = LENGTH_RANGES.get(lang, LENGTH_RANGES["en"])
+    if length not in ranges:
+        return None
+    lo, hi = ranges[length]
+    if register == "compressed":
+        lo, hi = round(lo * COMPRESSED_LO), round(hi * COMPRESSED_HI)
+    return lo, hi
+
+
+def lint_text(text: str, lang: str | None = None, register: str = "plain",
+              length: str | None = None, form: str | None = None) -> LintReport:
     text = _HTML_COMMENT.sub("", text)
     lang = lang or detect_lang(text)
     if lang not in HOLLOW_TERMS:
@@ -229,6 +273,11 @@ def lint_text(text: str, lang: str | None = None, register: str = "plain") -> Li
     paragraphs = split_paragraphs(text)
     words = max(word_count(text), 1)
     report = LintReport(lang=lang, words=words, paragraphs=len(paragraphs), register=register)
+    report.measure, report.measure_unit = measure_size(text, lang)
+    if length:
+        report.length_target = length_target(lang, length, register)
+    if form:
+        report.form_target = FORM_UNITS.get(form)
 
     # Hollow vocabulary: a hit is "specified" when the same sentence or the
     # following sentence carries a distinction marker.
@@ -274,6 +323,21 @@ def lint_text(text: str, lang: str | None = None, register: str = "plain") -> Li
         )
     if report.summary_ending:
         report.flags.append("last paragraph opens like a summary instead of a turn")
+    if report.length_target:
+        lo, hi = report.length_target
+        slack_lo = lo * (1 - LENGTH_TOLERANCE)
+        slack_hi = hi * (1 + LENGTH_TOLERANCE)
+        if report.measure < slack_lo:
+            report.flags.append(
+                f"shorter than asked ({report.measure}{report.measure_unit}, wanted {lo}-{hi})")
+        elif report.measure > slack_hi:
+            report.flags.append(
+                f"longer than asked ({report.measure}{report.measure_unit}, wanted {lo}-{hi})")
+    if report.form_target:
+        lo, hi = report.form_target
+        if not lo <= report.paragraphs <= hi:
+            report.flags.append(
+                f"{report.paragraphs} paragraphs, the form asks for {lo}-{hi}")
     if register == "compressed" and report.scaffold_density > MAX_SCAFFOLD_DENSITY:
         report.flags.append(
             f"explanatory scaffolding for a compressed piece "

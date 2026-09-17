@@ -50,7 +50,7 @@ class MockPipelineTests(unittest.TestCase):
     def test_full_loop_ko(self):
         p = MockProvider()
         stages = []
-        res = write("기다림", p, Options(lang="ko", rounds=2, threshold=8.0),
+        res = write("기다림", p, Options(lang="ko", length="short", rounds=2, threshold=8.0),
                     on_stage=lambda n, _: stages.append(n))
         # excavate, compose, lint, audit(revise), revise, lint, audit(pass)
         self.assertEqual(stages, ["excavate", "compose", "lint", "audit", "revise", "lint", "audit"])
@@ -63,13 +63,13 @@ class MockPipelineTests(unittest.TestCase):
         self.assertEqual(p.calls, 5)
 
     def test_full_loop_en(self):
-        res = write("waiting", MockProvider(), Options(lang="en", form="fragments", length="short"))
+        res = write("waiting", MockProvider(), Options(lang="en", length="short"))
         self.assertTrue(res.text.startswith("# Two Kinds of Waiting"))
         self.assertTrue(res.final_lint.passed, res.final_lint.flags)
 
     def test_low_threshold_stops_after_first_audit(self):
         # First mock audit scores 7.67 with verdict 'revise'; verdict still blocks.
-        res = write("기다림", MockProvider(), Options(lang="ko", rounds=2, threshold=5.0))
+        res = write("기다림", MockProvider(), Options(lang="ko", length="short", rounds=2, threshold=5.0))
         self.assertEqual(len(res.rounds), 2)
 
     def test_zero_rounds_never_revises(self):
@@ -122,12 +122,12 @@ class RegisterPipelineTests(unittest.TestCase):
         self.assertLess(len(comp.text), len(plain.text))
 
     def test_compressed_piece_passes_its_own_lint(self):
-        res = write("기다림", MockProvider(), Options(lang="ko", register="compressed"))
+        res = write("기다림", MockProvider(), Options(lang="ko", length="short", register="compressed"))
         self.assertTrue(res.final_lint.passed, res.final_lint.flags)
         self.assertEqual(res.final_lint.scaffold_count, 0)
 
     def test_compressed_english(self):
-        res = write("waiting", MockProvider(), Options(lang="en", register="compressed"))
+        res = write("waiting", MockProvider(), Options(lang="en", length="short", register="compressed"))
         self.assertTrue(res.text.startswith("# Two Kinds of Waiting"))
         self.assertTrue(res.final_lint.passed, res.final_lint.flags)
 
@@ -140,6 +140,28 @@ class RegisterPipelineTests(unittest.TestCase):
         trace = res.to_trace()
         self.assertEqual(trace["options"]["register"], "compressed")
         self.assertEqual(trace["rounds"][-1]["lint"]["register"], "compressed")
+
+
+class SizeGateTests(unittest.TestCase):
+    """The canned piece is a short one, so asking for medium must not pass."""
+
+    def test_wrong_length_keeps_the_loop_going(self):
+        res = write("기다림", MockProvider(), Options(lang="ko", length="medium", rounds=1))
+        self.assertFalse(res.final_lint.passed)
+        self.assertTrue(any("shorter than asked" in f for f in res.final_lint.flags),
+                        res.final_lint.flags)
+        self.assertTrue(res.stopped_because.startswith("max rounds reached"))
+
+    def test_right_length_accepts(self):
+        res = write("기다림", MockProvider(), Options(lang="ko", length="short", rounds=1))
+        self.assertTrue(res.final_lint.passed, res.final_lint.flags)
+        self.assertEqual(res.stopped_because, "accepted")
+
+    def test_wrong_form_is_flagged(self):
+        res = write("기다림", MockProvider(),
+                    Options(lang="ko", length="short", form="fragments", rounds=0))
+        self.assertTrue(any("paragraphs" in f for f in res.final_lint.flags),
+                        res.final_lint.flags)
 
 
 class ProviderFactoryTests(unittest.TestCase):
