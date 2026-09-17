@@ -130,7 +130,10 @@ class MessageTests(unittest.TestCase):
                 msg = missing_key_message()
             self.assertIn(str(path), msg)
             self.assertIn("nano", msg)
-            self.assertIn("--provider mock", msg)
+            # The keyless way out has to be the one that writes about the
+            # topic asked for, not the mock, which returns canned text.
+            self.assertIn("--prompt", msg)
+            self.assertIn("프롬프트", msg)
 
     def test_message_when_file_absent_says_to_create_it(self):
         with tempfile.TemporaryDirectory() as d:
