@@ -94,5 +94,7 @@ def missing_key_message() -> str:
         f"{where}\n"
         "    다시 로그인하거나 source 할 필요는 없다. 이 파일은 실행할 때마다 직접 읽는다.\n"
         "    OpenRouter 키는 https://openrouter.ai/keys 에서 만든다.\n"
-        "    키 없이 동작만 보려면: --provider mock"
+        "\n"
+        "  키를 만들지 않고 쓰려면 --prompt 를 붙인다. 챗 창에 붙여넣을 프롬프트를 출력한다.\n"
+        "  한글 단어로 칠 때는 '프롬프트'를 덧붙이면 된다. 예: 버거킹 단상 프롬프트"
     )

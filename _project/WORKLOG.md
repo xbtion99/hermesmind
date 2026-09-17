@@ -77,3 +77,11 @@
 - blocker: 없음. 키 없이 쓸 수 있다
 - 다음 한 가지 행동: 폰에서 `저녁 프롬프트` 출력을 ChatGPT에 붙여넣고, 돌아온 글을 `aw --lint`로 검사 (키 불필요)
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 키 없을 때의 한글 단어 경로
+- 목표: 사용자가 `버거킹 단상`을 쳤으나 키가 없어 오류만 나고 아무것도 못 얻음
+- 변경 파일: abstract_writer/keys.py(오류 메시지에 --prompt 안내 추가), abstract_writer/cli.py(phrase 경로에서 키 없으면 프롬프트로 대체), README.md, tests/test_cli.py
+- 검증 결과: 키·HOME 없는 환경에서 `--shell-phrase "버거킹 단상"` → 프롬프트 출력, exit 0, 주제와 단상 형식 반영, stderr에 사유 한 줄 · `abstract_writer "버거킹"` 명령형은 exit 1로 그대로 오류 · unittest 135 OK(132→135) · ruff 통과 [샌드박스 검증됨]
+- 결정: 짧게 치는 인터페이스(phrase)는 너그럽게, 길게 치는 인터페이스(명령형)는 정확하게. phrase는 최소 타이핑이 목적이므로 빈손으로 끝내지 않는다
+- blocker: 없음
+- 다음 한 가지 행동: 폰에서 pull 후 `버거킹 단상` 실행, 나온 프롬프트를 ChatGPT에 붙여넣기 (키 불필요)
+

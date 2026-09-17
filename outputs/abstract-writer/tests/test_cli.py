@@ -182,6 +182,63 @@ class CliTests(unittest.TestCase):
             main(["evening", "--prompt", "--lang", "en"])
         self.assertIn("Six principles", out.getvalue())
 
+    def _no_key_env(self, home):
+        import os
+        saved = dict(os.environ)
+        for v in ("ABSTRACT_WRITER_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY",
+                  "ABSTRACT_WRITER_PROVIDER", "HERMES_HOME"):
+            os.environ.pop(v, None)
+        os.environ["HOME"] = home
+        return saved
+
+    def test_phrase_without_a_key_falls_back_to_the_prompt(self):
+        import os
+        with tempfile.TemporaryDirectory() as d:
+            saved = self._no_key_env(d)
+            try:
+                out, err = io.StringIO(), io.StringIO()
+                with redirect_stdout(out), redirect_stderr(err):
+                    rc = main(["--shell-phrase", "버거킹 단상"])
+                self.assertEqual(rc, 0)
+                self.assertIn("## 주제", out.getvalue())
+                self.assertIn("버거킹", out.getvalue())
+                self.assertIn("단상", out.getvalue())
+                self.assertIn("키 없음", err.getvalue())
+            finally:
+                os.environ.clear()
+                os.environ.update(saved)
+
+    def test_spelled_out_command_without_a_key_still_fails(self):
+        import os
+        with tempfile.TemporaryDirectory() as d:
+            saved = self._no_key_env(d)
+            try:
+                err = io.StringIO()
+                with redirect_stdout(io.StringIO()), redirect_stderr(err):
+                    rc = main(["버거킹"])
+                self.assertEqual(rc, 1)
+                self.assertIn("--prompt", err.getvalue())
+                self.assertIn("프롬프트", err.getvalue())
+            finally:
+                os.environ.clear()
+                os.environ.update(saved)
+
+    def test_phrase_with_a_key_does_not_fall_back(self):
+        import os
+        with tempfile.TemporaryDirectory() as d:
+            saved = self._no_key_env(d)
+            try:
+                os.environ["ABSTRACT_WRITER_PROVIDER"] = "mock"
+                out, err = io.StringIO(), io.StringIO()
+                with redirect_stdout(out), redirect_stderr(err):
+                    rc = main(["--shell-phrase", "기다림", "-q"])
+                self.assertEqual(rc, 0)
+                self.assertIn("# 두 종류의 기다림", out.getvalue())
+                self.assertNotIn("## 주제", out.getvalue())
+            finally:
+                os.environ.clear()
+                os.environ.update(saved)
+
     def test_missing_seed_is_usage_error(self):
         with redirect_stderr(io.StringIO()):
             self.assertEqual(main([]), 2)

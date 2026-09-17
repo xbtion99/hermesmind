@@ -17,6 +17,7 @@ from pathlib import Path
 
 from . import __version__
 from .lint import detect_lang, lint_text
+from .keys import find_api_key
 from .phrase import has_hangul, parse_phrase
 from .pipeline import Options, ProviderError, StageError, write
 from .providers import make_provider
@@ -108,6 +109,17 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     want_prompt = args.prompt or overrides.pop("mode", None) == "prompt"
+
+    # The phrase interface exists so a topic alone is enough to type. With no
+    # key there is nothing to call, and an error leaves the person with
+    # nothing, so hand them the prompt instead and say why. Spelling the
+    # command out in full still fails loudly.
+    if phrase is not None and not want_prompt and args.provider != "mock":
+        if find_api_key().key is None:
+            want_prompt = True
+            if not args.quiet:
+                print("[키 없음] 모델을 부르지 못해 붙여넣기용 프롬프트를 출력한다. "
+                      "챗 창에 붙여넣으면 된다.", file=sys.stderr)
 
     lang = args.lang or detect_lang(args.seed)
     opts = Options(
