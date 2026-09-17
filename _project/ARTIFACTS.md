@@ -20,3 +20,5 @@
 | 2026-09-17 | outputs/abstract-writer/abstract_writer/keys.py | API 키 탐색(환경변수 → 자체 .env → Hermes .env) | 우선순위·직접 읽기·오류 메시지 실측, unittest 107 OK [샌드박스 검증됨] |
 | 2026-09-17 | outputs/abstract-writer/abstract_writer/endpoints.py | 키 종류 → 엔드포인트·모델 결정 | 낡은 기본값 상황 포함 실측, unittest 125 OK [샌드박스 검증됨] |
 | 2026-09-17 | outputs/abstract-writer (--prompt 모드) | 키 없이 붙여넣기용 프롬프트 출력 | 키·HOME 없는 환경에서 실측, unittest 132 OK [샌드박스 검증됨] |
+| 2026-09-17 | outputs/abstract-writer/examples/burgerking_ko.md | --prompt 프롬프트로 받은 첫 실제 산출물 (단상, 1231자) | --lint 지적 0건 [샌드박스 검증됨] |
+| 2026-09-17 | evaluations/2026-09-17_first-model-output.md | 프롬프트가 실제 모델에서 작동하는지 첫 평가 | 형식·길이·린트 실측 |
