@@ -51,3 +51,11 @@
 - blocker: 없음
 - 다음 한 가지 행동: 폰에서 setup 재실행 후 `저녁` 입력 확인 (Android 기기 필요)
 
+## 2026-09-17  Claude (claude-code-web / xbtion99) — 키 탐색
+- 목표: 폰에서 훅은 통과했으나 "no API key"에서 멈춤. 키를 넣는 경로를 짧게 만든다
+- 변경 파일: abstract_writer/keys.py(신규), abstract_writer/providers.py, README.md, tests/test_keys.py(신규), tests/test_pipeline.py
+- 검증 결과: 환경변수 > ~/.abstract-writer.env > ~/.hermes/.env 순서 실측 · 파일을 실행 시점에 직접 읽어 source 불필요 확인 · 키 없을 때 메시지가 실제 파일 경로와 nano 명령을 지목 · unittest 107 OK(92→107) · ruff 통과 [샌드박스 검증됨]
+- 결정: Hermes가 쓰는 $HERMES_HOME/.env를 폴백으로 읽는다. 같은 기기에서 Hermes를 쓰면 키를 두 번 적을 필요가 없고, 경로는 hermes_constants.get_env_path()의 규약과 같다
+- blocker: 사용자가 키를 직접 넣어야 한다. 대신할 수 없음
+- 다음 한 가지 행동: 폰에서 nano ~/.abstract-writer.env 로 키를 넣고 `저녁` 실행 (API 키 필요)
+

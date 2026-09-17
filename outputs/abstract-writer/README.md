@@ -27,7 +27,19 @@ export ABSTRACT_WRITER_BASE_URL=https://openrouter.ai/api/v1   # 기본값
 export ABSTRACT_WRITER_MODEL=anthropic/claude-sonnet-4.5       # 기본값. 원하는 모델로 바꾼다
 ```
 
-Hermes를 이미 쓰고 있다면 `~/.hermes/.env`의 키와 같은 값을 넣으면 된다.
+### 키를 찾는 순서
+
+환경변수를 내보내지 않아도 된다. 아래 순서로 찾고, 파일은 실행할 때마다 직접 읽는다.
+그래서 키를 적어 넣은 뒤 `source`를 하거나 세션을 새로 열 필요가 없다.
+
+1. `ABSTRACT_WRITER_API_KEY` → `OPENROUTER_API_KEY` → `OPENAI_API_KEY` 환경변수.
+   직접 내보낸 값이 항상 이긴다.
+2. `~/.abstract-writer.env` — 이 프로그램의 키 파일. `termux-setup.sh`가 만들어 둔다.
+   경로는 `ABSTRACT_WRITER_ENV_FILE`로 바꿀 수 있다.
+3. `~/.hermes/.env` — Hermes가 키를 두는 곳(`HERMES_HOME`을 따른다).
+   같은 기기에서 Hermes를 이미 쓰고 있다면 키를 한 번 더 적을 필요가 없다.
+
+키가 없으면 어느 파일을 열어 무엇을 적어야 하는지 오류 메시지가 알려준다.
 
 ## 폰에서 쓰기 (Android · Termux)
 
@@ -265,6 +277,7 @@ abstract-writer/
     pipeline.py             # 단계 연결, JSON 관대 파싱, 수락 조건
     prompts.py              # 단계별 시스템 프롬프트 (ko/en)
     lint.py                 # 결정론적 검사
+    keys.py                 # 환경변수와 .env 파일에서 API 키 찾기
     phrase.py               # "기다림 함축 짧게" → 주제 + 옵션
     shellrc.py              # ~/.bashrc의 관리 구간 설치·갱신
     providers.py            # OpenAI 호환 클라이언트, Mock

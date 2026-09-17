@@ -169,6 +169,7 @@ class ProviderFactoryTests(unittest.TestCase):
         with self.assertRaises(ProviderError) as ctx:
             p.complete("s", "u")
         self.assertIn("ABSTRACT_WRITER_API_KEY", str(ctx.exception))
+        self.assertIn(".abstract-writer.env", str(ctx.exception))
 
 
 class StageFailureTests(unittest.TestCase):

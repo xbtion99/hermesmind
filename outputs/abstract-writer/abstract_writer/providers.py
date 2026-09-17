@@ -16,6 +16,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Protocol
 
+from .keys import find_api_key, missing_key_message
+
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 DEFAULT_MODEL = "anthropic/claude-sonnet-4.5"
 
@@ -46,9 +48,7 @@ class OpenAICompatible:
     def complete(self, system: str, user: str, *, temperature: float = 0.7,
                  max_tokens: int = 4000) -> str:
         if not self.api_key:
-            raise ProviderError(
-                "no API key: set ABSTRACT_WRITER_API_KEY (or OPENROUTER_API_KEY / OPENAI_API_KEY)"
-            )
+            raise ProviderError(missing_key_message())
         url = self.base_url.rstrip("/") + "/chat/completions"
         body = json.dumps({
             "model": self.model,
@@ -253,9 +253,6 @@ def make_provider(name: str = "openai", *, model: str | None = None, base_url: s
         return OpenAICompatible(
             model=model or os.environ.get("ABSTRACT_WRITER_MODEL", DEFAULT_MODEL),
             base_url=base_url or os.environ.get("ABSTRACT_WRITER_BASE_URL", DEFAULT_BASE_URL),
-            api_key=api_key
-            or os.environ.get("ABSTRACT_WRITER_API_KEY")
-            or os.environ.get("OPENROUTER_API_KEY")
-            or os.environ.get("OPENAI_API_KEY"),
+            api_key=api_key or find_api_key()[0],
         )
     raise ProviderError(f"unknown provider: {name}")
