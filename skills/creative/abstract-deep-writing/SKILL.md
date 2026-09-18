@@ -1,0 +1,120 @@
+---
+name: abstract-deep-writing
+description: "Write abstract prose that has depth: distinctions, anchors, tension, a turn — not hollow big words."
+version: 0.2.0
+author: hermesmind
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [writing, essay, abstract, philosophy, prose, korean, depth, anti-slop]
+    category: creative
+    related_skills: [humanizer, creative-ideation]
+---
+
+# Abstract Deep Writing
+
+Write prose that operates at a high level of generality *and* says something. The failure mode this skill
+exists to prevent is hollow abstraction: big words swapped for big words ("the essence of being is flow"),
+sentences no reader could disagree with because they claim nothing.
+
+## When to use
+
+The user asks for an essay, reflection, meditation, fragments, or letter on an abstract theme
+(time, waiting, forgiveness, attention, loneliness, memory, work, silence…) and wants it to feel
+deep rather than decorative. Also use it when the user says a draft "sounds profound but empty".
+
+Korean requests such as "추상적이지만 깊이 있는 글", "사유하는 글", "에세이", "단상" trigger this skill.
+
+## The six principles
+
+1. **Abstraction is a level, not a blur.** Move up and down the ladder of abstraction
+   (this cow → cow → livestock → asset → wealth). Every paragraph must descend at least once to something concrete.
+2. **The distinction is the unit of depth.** "Not A but B." Split something the reader saw as one into two.
+   An abstract sentence with no distinction in it is a candidate for deletion.
+3. **Place the tension; do not cover it.** Find two true sentences that collide. Either resolve the collision with a
+   third distinction, or name the exact point where it cannot be resolved. "Balance", "harmony", "both sides" are cover-ups.
+4. **An anchor is a test, not an example.** A concrete scene exists to check whether the claim survives it.
+   "Someone grieved" is not an anchor. "The morning after the funeral he made two cups of coffee out of habit" is.
+5. **There must be a stake.** If the reader accepts this, what do they see differently tomorrow?
+6. **End on a turn, not a summary.** Never open the last paragraph with "in conclusion", "ultimately", "결국", "요컨대".
+   The last sentence should make the first sentence read differently.
+
+**Watched vocabulary** (must be specified by a distinction in the same or next sentence, or deleted):
+essence, true self, infinite, transcend, ultimate, profound, the universe, energy, oneness, harmony, journey /
+본질, 진정한, 무한, 초월, 궁극, 근원, 존재 자체, 조화, 하나됨, 에너지, 진동, 우주적, 심오, 삶의 의미, 영원.
+
+## Procedure
+
+Do the excavation **before** writing a sentence of the piece, and show it to the user only if they ask.
+
+1. **Excavate.** Turn the seed into one real question (one that can be answered wrongly). Write down
+   2–3 distinctions (`a` / `b` / why they get confused), one tension (two true claims and where they collide),
+   2–3 mundane, specific anchors (a bus stop, a second cup of coffee), the stake, and a candidate final sentence.
+2. **Compose** on that map. Every distinction appears. At least two anchors appear and actually test a claim.
+   The tension is placed, not covered. The stake is felt in the last third. End on the turn.
+3. **Audit** your own draft against the six principles. Quote the exact places that fail. Score each 0–10.
+4. **Revise** only the quoted places. Do not add a summary paragraph. Do not add hedges.
+5. Deliver the piece alone. Do not explain the method or the map unless asked.
+
+## Register: explain or imply
+
+The six principles decide what the piece must *have*. Whether you *say* it is a separate choice.
+
+**Plain** (default) states the distinctions and the tension outright. Easier to follow on a first read.
+
+**Compressed** (함축) keeps every principle and strips the explanation. Ask for it when the user says
+"함축적으로", "더 압축해서", "설명 빼고", "more implicit", "tighter". Four bans:
+
+1. No logical connectives: 그러니, 그래서, 따라서, 왜냐하면, 즉, 다시 말해 / therefore, thus, because, in other words.
+2. No sentence that comments on your own piece: "두 문장은 충돌한다", "which means that".
+3. Do not name the distinction. Put the scene of A beside the scene of B and let the difference appear.
+4. Finish inside 60% of the length you would otherwise write. The other 40% is silence.
+
+Compressed is not vague. Vague prose has no principles; compressed prose has them and leaves them unsaid.
+
+Same map, two registers:
+
+> **Plain.** 기다림에는 두 종류가 있다. 하나는 버스를 기다리는 것처럼 끝이 정해진 기다림이고, 다른 하나는
+> 답장을 기다리는 것처럼 끝이 상대에게 달린 기다림이다. 우리는 둘을 같은 동사로 부르지만, 정류장에서
+> 전광판의 남은 분을 보는 사람과 읽음 표시를 확인하는 손가락은 서로 다른 일을 하고 있다.
+
+> **Compressed.** 기다림에는 두 종류가 있다. 버스는 끝이 정해져 있다. 답장은 끝이 상대에게 있다.
+>
+> 전광판의 숫자가 줄어든다. 3분, 2분, 1분. 시계와 내가 같은 방향으로 간다.
+
+The second drops the commentary ("우리는 둘을 같은 동사로 부르지만", "서로 다른 일을 하고 있다") and keeps
+the distinction, the anchors and the direction.
+
+## Style
+
+Plain. No exclamations, no rhetorical inflation, no rhythmic lists of three. One thought per sentence; mix short and long.
+Do not preach ("we must…"). No quotations, famous names, or stock metaphors (journey, voyage, seed, mirror).
+
+## Contrast to calibrate on
+
+Hollow:
+> Time flows. Within that flow we encounter the essence of being. Waiting is part of life, and in it we discover our true selves.
+
+Deep:
+> There are two kinds of waiting. One has a fixed end, like waiting for a bus; the other has an end that belongs to someone
+> else, like waiting for a reply. In the first kind time is subtracted; in the second it accumulates. When we say waiting
+> is hard, what is hard is not the length of the time but not knowing which way it is being counted.
+
+The second does: distinction (fixed end / end owned by another), anchors (bus, reply), tension (subtracted / accumulated),
+stake (what "hard" means changes), turn (length → direction).
+
+## Standalone program
+
+The same method runs as a pipeline with a deterministic lint in this repository at
+`outputs/abstract-writer/` (`python3 -m abstract_writer "seed"`; `--register compressed` for 함축;
+`--lint file.md` checks an existing draft).
+Use it when the user wants batch generation, a trace of each stage, or a mechanical check of a draft.
+`outputs/abstract-writer/METHOD.md` is the canonical statement of the method; keep this skill in sync with it.
+
+## Pitfalls
+
+- Writing the piece first and "adding depth" afterwards. Depth comes from the excavation; do it first.
+- Anchors that are grand images (the sea, the stars). They cannot break a claim, so they test nothing.
+- Resolving the tension with a soothing word. If you cannot resolve it, say precisely where it resists.
+- A final paragraph that restates the piece. Cut it and end one paragraph earlier if no turn is available.
